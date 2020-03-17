@@ -1,0 +1,35 @@
+{
+	"builds": [
+		{
+			"src": "app.py",
+			"use": "@now/python"
+		}
+	],
+	"routes": [
+		{
+			"src": "/(.*)",
+			"dest": "app.py"
+		},
+		{
+			"src": "/bot",
+			"methods": ["POST"],
+			"dest": "app.py"
+		},
+		{
+			"src": "/bot",
+			"methods": ["GET"],
+			"dest": "app.py"
+		}
+	],
+	"env": {
+		"telegramToken": "@telegramtoken",
+		"mlabUser": "@mlab-user",
+		"mlabPassword": "@mlab-password",
+		"dbUri": "@db-uri",
+		"dbName": "@db-name",
+		"tableName": "@table-name",
+		"tableGear": "@table-gear",
+		"blizzId": "@blizzard-id",
+		"blizzSecret": "@blizzard-secret"
+	}
+}
