@@ -687,13 +687,13 @@ def sendAdminData(message):
 		client = pymongo.MongoClient(dbUri)
 		wowDb = client[dbName]
 		wowTable = wowDb[tableAdmin]
-		query = {'_id': {'$regex': '.'}}
+		query = {'_id': {'$regex': '\\d'}}
 		result = wowTable.find(query)
 		for record in result:
-			data = 'Id: {}\nRegion: {}\nLocale: {}\nUsername: {}\n'.format(record.get('_id'), record.get('region'), record.get('locale'), record.get('username'))
-			bot.send_message(message.chat.id, text = data)
+			msg = 'Id: {}\nRegion: {}\nLocale: {}\nUsername: {}\n'.format(record.get('_id'), record.get('region'), record.get('locale'), record.get('username'))
+			bot.send_message(message.chat.id, text = msg)
 	else:
-		bot.send_message(message.chat.id, text = 'You are not the admin')
+		bot.send_message(message.chat.id, text='You are not the admin •`_´•')
 
 def createAccessToken(region):
 	url = "https://{}.battle.net/oauth/token".format(region)
