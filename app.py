@@ -686,9 +686,9 @@ def sendAdminData(message):
 	if message.from_user.id == userAdmin:
 		client = pymongo.MongoClient(dbUri)
 		wowDb = client[dbName]
-		wowTable = wowDb[tableAdmin]
-		query = {'_id': {'$regex': '\\d'}}
-		result = wowTable.find(query)
+		adminTable = wowDb[tableAdmin]
+		query = {}
+		result = adminTable.find(query)
 		for record in result:
 			msg = 'Id: {}\nRegion: {}\nLocale: {}\nUsername: {}\n'.format(record.get('_id'), record.get('region'), record.get('locale'), record.get('username'))
 			bot.send_message(message.chat.id, text = msg)
