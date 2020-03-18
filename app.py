@@ -316,13 +316,23 @@ def sendGear(message):
 									spells += '{}{} - {}{}'.format(breakLine, spell['spell'].get('name'), spell.get('description'), breakLine)
 							binding = ''
 							if item.get('binding') != None:
-								binding += '{}{}{}'.format(breakLine, item['binding'].get('name'), breakLine)
+								binding += '{}{}{}'.format(item['binding'].get('name'), breakLine, breakLine)
 							azeriteDetails = ''
 							if item.get('azerite_details') != None:
-								azeriteDetails += 'Azerite details: {}{}'.format(item.get('azerite_details'), breakLine)
-								# for detail in item['azerite_details'].get('selected_powers'):
-								# 	spellDetail = detail.get('spell_tooltip')
-								# 	azeriteDetails += '- {}: {}{}'.format(spellDetail['spell'].get('name'), spellDetail.get('description'), breakLine)
+								azeriteDetails += 'Azerite details:{}'.format(breakLine)
+								if item['azerite_details'].get('selected_powers') != None:
+									powers = item['azerite_details'].get('selected_powers')
+									for detail in powers:
+										spellDetail = detail.get('spell_tooltip')
+										azeriteDetails += '- {}: {}{}'.format(spellDetail['spell'].get('name'), spellDetail.get('description'), breakLine)
+								elif item['azerite_details'].get('selected_essences') != None:
+									essences = item['azerite_details'].get('selected_essences')
+									for essence in essences:
+										if essence.get('main_spell_tooltip') != None:
+											azeriteDetails += 'Active skill: {}{}'.format(essence['main_spell_tooltip']['spell'].get('name'), breakLine)
+										elif essence.get('passive_spell_tooltip') != None:
+											azeriteDetails += 'Passive skill: {}{}'.format(essence['passive_spell_tooltip']['spell'].get('name'), breakLine)
+								azeriteDetails += '{}'.format(breakLine)
 							lastLine = ''
 							if armor != '':
 								lastLine += armor
@@ -339,8 +349,8 @@ def sendGear(message):
 								itemData += spells
 							if binding != '':
 								itemData += binding
-							# if azeriteDetails != '':
-							# 	itemData += azeriteDetails
+							if azeriteDetails != '':
+								itemData += azeriteDetails
 							if lastLine != '':
 								itemData += lastLine
 							gearQuery = {'item': itemId}
