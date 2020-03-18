@@ -680,8 +680,9 @@ def sendArenaStats(message):
 	else:
 		bot.send_message(message.chat.id, 'You need specify a realm, player and bracket •`_´•')
 
-@bot.message_handler(commands = ['admin'])
+@bot.message_handler(commands = ['data'])
 def sendAdminData(message):
+	bot.send_message(message.chat.id, 'Checking... ಠ_ರೃ')
 	if message.from_user.id == userAdmin:
 		client = pymongo.MongoClient(dbUri)
 		wowDb = client[dbName]
