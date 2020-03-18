@@ -21,6 +21,8 @@ dbUri = os.getenv('dbUri')
 dbName = os.getenv('dbName')
 tableName = os.getenv('tableName')
 tableGear = os.getenv('tableGear')
+tableAdmin = os.getenv('tableAdmin')
+userAdmin = int(os.getenv('adminUser'))
 bot = telebot.TeleBot(tgTkn, threaded=False)
 pathModify = '?retryWrites=false'
 
@@ -277,11 +279,11 @@ def sendGear(message):
 					if response.get('equipped_items') != None:
 						for item in response.get('equipped_items'):
 							itemId = player + '-' + item['slot'].get('type')
-							firstLine = '{}({}){}'.format(item['name'], item['level']['display_string'], breakLine)
+							firstLine = '{} ({}){}'.format(item['name'], item['level']['display_string'], breakLine)
 							itemType = ''
 							if item.get('is_subclass_hidden') == None:
 								itemType += '({})'.format(item['item_subclass'].get('name'))
-							secondLine = '{}{} - [{}]{}{}'.format(item['inventory_type']['name'], itemType, item['quality']['name'], breakLine, breakLine)
+							secondLine = '{} {} - [{}]{}{}'.format(item['inventory_type']['name'], itemType, item['quality']['name'], breakLine, breakLine)
 							armor = ''
 							if item.get('armor') != None:
 								if item['armor'].get('display') != None:
@@ -315,6 +317,12 @@ def sendGear(message):
 							binding = ''
 							if item.get('binding') != None:
 								binding += '{}{}{}'.format(breakLine, item['binding'].get('name'), breakLine)
+							azeriteDetails = ''
+							# if item.get('azerite_details') != None:
+							# 	azeriteDetails += 'Azerite details: {}{}'.format(item.get('azerite_details'), breakLine)
+								# for detail in item['azerite_details'].get('selected_powers'):
+								# 	spellDetail = detail.get('spell_tooltip')
+								# 	azeriteDetails += '- {}: {}{}'.format(spellDetail['spell'].get('name'), spellDetail.get('description'), breakLine)
 							lastLine = ''
 							if armor != '':
 								lastLine += armor
@@ -331,6 +339,8 @@ def sendGear(message):
 								itemData += spells
 							if binding != '':
 								itemData += binding
+							# if azeriteDetails != '':
+							# 	itemData += azeriteDetails
 							if lastLine != '':
 								itemData += lastLine
 							gearQuery = {'item': itemId}
@@ -669,6 +679,19 @@ def sendArenaStats(message):
 			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
 	else:
 		bot.send_message(message.chat.id, 'You need specify a realm, player and bracket •`_´•')
+
+@bot.message_handler(commands = ['admin'])
+def sendAdminData(message):
+	if message.from_user.id == userAdmin:
+		client = pymongo.MongoClient(dbUri)
+		wowDb = client[dbName]
+		wowTable = wowDb[tableAdmin]
+		query = {'_id': {'$regex': '.'}}
+		result = wowTable.find(query)
+		for record in result:
+			bot.send_message(message.chat.id, text = record)
+	else:
+		bot.send_message(message.chat.id, text = 'You\'re not the admin')
 
 def createAccessToken(region):
 	url = "https://{}.battle.net/oauth/token".format(region)

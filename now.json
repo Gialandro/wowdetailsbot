@@ -29,6 +29,8 @@
 		"dbName": "@db-name",
 		"tableName": "@table-name",
 		"tableGear": "@table-gear",
+		"tableAdmin": "@table-admin",
+		"adminUser": "@admin-user",
 		"blizzId": "@blizzard-id",
 		"blizzSecret": "@blizzard-secret"
 	}
