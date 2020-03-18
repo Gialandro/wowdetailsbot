@@ -318,8 +318,8 @@ def sendGear(message):
 							if item.get('binding') != None:
 								binding += '{}{}{}'.format(breakLine, item['binding'].get('name'), breakLine)
 							azeriteDetails = ''
-							# if item.get('azerite_details') != None:
-							# 	azeriteDetails += 'Azerite details: {}{}'.format(item.get('azerite_details'), breakLine)
+							if item.get('azerite_details') != None:
+								azeriteDetails += 'Azerite details: {}{}'.format(item.get('azerite_details'), breakLine)
 								# for detail in item['azerite_details'].get('selected_powers'):
 								# 	spellDetail = detail.get('spell_tooltip')
 								# 	azeriteDetails += '- {}: {}{}'.format(spellDetail['spell'].get('name'), spellDetail.get('description'), breakLine)
@@ -689,9 +689,10 @@ def sendAdminData(message):
 		query = {'_id': {'$regex': '.'}}
 		result = wowTable.find(query)
 		for record in result:
-			bot.send_message(message.chat.id, text = record)
+			data = 'Id: {}\nRegion: {}\nLocale: {}\nUsername: {}\n'.format(record.get('_id'), record.get('region'), record.get('locale'), record.get('username'))
+			bot.send_message(message.chat.id, text = data)
 	else:
-		bot.send_message(message.chat.id, text = 'You\'re not the admin')
+		bot.send_message(message.chat.id, text = 'You are not the admin')
 
 def createAccessToken(region):
 	url = "https://{}.battle.net/oauth/token".format(region)
