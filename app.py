@@ -47,6 +47,8 @@ locales = {
 @bot.message_handler(commands = ['start', 'help'])
 def startMessage(message):
 	bot.send_message(message.chat.id, '''This bot get info from World of Warcraft.
+	Author: @Gialandro
+	Github: https://github.com/Gialandro/wowdetailsbot
 
 	First steps:
 
@@ -327,9 +329,10 @@ def sendGear(message):
 										azeriteDetails += '- {}: {}{}'.format(spellDetail['spell'].get('name'), spellDetail.get('description'), breakLine)
 								elif item['azerite_details'].get('selected_essences') != None:
 									essences = item['azerite_details'].get('selected_essences')
+									azeriteDetails += 'Active skills:{}'.format(breakLine)
 									for essence in essences:
 										if essence.get('main_spell_tooltip') != None:
-											azeriteDetails += 'Active skill: {}{}'.format(essence['main_spell_tooltip']['spell'].get('name'), breakLine)
+											azeriteDetails += '{}{}'.format(essence['main_spell_tooltip']['spell'].get('name'), breakLine)
 										elif essence.get('passive_spell_tooltip') != None:
 											azeriteDetails += 'Passive skill: {}{}'.format(essence['passive_spell_tooltip']['spell'].get('name'), breakLine)
 								azeriteDetails += '{}'.format(breakLine)
