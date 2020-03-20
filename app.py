@@ -13,6 +13,7 @@ from datetime import datetime
 import json
 from flask import Flask, jsonify, Response, request
 import requests
+from requests.exceptions import ConnectionError
 from requests.auth import HTTPBasicAuth
 
 app = Flask(__name__)
@@ -321,7 +322,6 @@ def sendGear(message):
 								binding += '{}{}{}'.format(item['binding'].get('name'), breakLine, breakLine)
 							azeriteDetails = ''
 							if item.get('azerite_details') != None:
-								azeriteDetails += 'Azerite details:{}'.format(breakLine)
 								if item['azerite_details'].get('selected_powers') != None:
 									powers = item['azerite_details'].get('selected_powers')
 									for detail in powers:
@@ -329,12 +329,12 @@ def sendGear(message):
 										azeriteDetails += '- {}: {}{}'.format(spellDetail['spell'].get('name'), spellDetail.get('description'), breakLine)
 								elif item['azerite_details'].get('selected_essences') != None:
 									essences = item['azerite_details'].get('selected_essences')
-									azeriteDetails += 'Active skills:{}'.format(breakLine)
+									azeriteDetails += 'Skills:{}'.format(breakLine)
 									for essence in essences:
 										if essence.get('main_spell_tooltip') != None:
-											azeriteDetails += '{}{}'.format(essence['main_spell_tooltip']['spell'].get('name'), breakLine)
+											azeriteDetails += 'Active: {}{}'.format(essence['main_spell_tooltip']['spell'].get('name'), breakLine)
 										elif essence.get('passive_spell_tooltip') != None:
-											azeriteDetails += 'Passive skill: {}{}'.format(essence['passive_spell_tooltip']['spell'].get('name'), breakLine)
+											azeriteDetails += 'Passive: {}{}'.format(essence['passive_spell_tooltip']['spell'].get('name'), breakLine)
 								azeriteDetails += '{}'.format(breakLine)
 							lastLine = ''
 							if armor != '':
@@ -413,6 +413,8 @@ def sendGear(message):
 						bot.send_message(message.chat.id, '{} has no equipment ¯\\_(ツ)_/¯'.format(player.capitalize()))
 				else:
 					bot.send_message(message.chat.id, 'Player not found ☉ ‿ ⚆')
+		except ConnectionError:
+			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
 			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
 		client.close()
