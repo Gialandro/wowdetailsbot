@@ -13,7 +13,6 @@ from datetime import datetime
 import json
 from flask import Flask, jsonify, Response, request
 import requests
-from requests.exceptions import ConnectionError
 from requests.auth import HTTPBasicAuth
 
 app = Flask(__name__)
@@ -241,6 +240,8 @@ def sendToken(message):
 			elif record.get('locale') == None:
 				bot.send_message(message.chat.id, 'You need assign your locale')
 		client.close()
+	except requests.exceptions.ConnectionError as e:
+		bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 	except Exception as e:
 			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
 
@@ -413,7 +414,7 @@ def sendGear(message):
 						bot.send_message(message.chat.id, '{} has no equipment ¯\\_(ツ)_/¯'.format(player.capitalize()))
 				else:
 					bot.send_message(message.chat.id, 'Player not found ☉ ‿ ⚆')
-		except ConnectionError:
+		except requests.exceptions.ConnectionError as e:
 			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
 			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
@@ -585,6 +586,8 @@ def sendStats(message):
 					bot.send_message(message.chat.id, text = summaryData)
 				else:
 					bot.send_message(message.chat.id, 'Player not found ☉ ‿ ⚆')
+		except requests.exceptions.ConnectionError as e:
+			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
 			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
 		client.close()
@@ -636,6 +639,8 @@ def sendBGStats(message):
 					bot.send_message(message.chat.id, text = bgData)
 				else:
 					bot.send_message(message.chat.id, 'Player not found ☉ ‿ ⚆')
+		except requests.exceptions.ConnectionError as e:
+			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
 			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
 	else:
@@ -690,6 +695,8 @@ def sendArenaStats(message):
 					bot.send_message(message.chat.id, text = arenaData)
 				else:
 					bot.send_message(message.chat.id, 'No result ☉ ‿ ⚆')
+		except requests.exceptions.ConnectionError as e:
+			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
 			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
 	else:
