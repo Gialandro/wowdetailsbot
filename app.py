@@ -6,6 +6,7 @@
 import os
 import re
 import urllib
+import urllib.parse
 import telebot
 import pymongo
 import numpy
@@ -254,6 +255,7 @@ def sendGear(message):
 		realm = message.text.split()[1].lower()
 		realm = realm.replace('\'', '')
 		player = message.text.split()[2].lower()
+		player = encodeString(player)
 	userId = message.from_user.id
 	breakLine = '\n'
 	if realm and player:
@@ -461,6 +463,7 @@ def sendStats(message):
 		realm = message.text.split()[1].lower()
 		realm = realm.replace('\'', '')
 		player = message.text.split()[2].lower()
+		player = encodeString(player)
 	userId = message.from_user.id
 	if realm and player:
 		try:
@@ -603,6 +606,7 @@ def sendBGStats(message):
 		realm = message.text.split()[1].lower()
 		realm = realm.replace('\'', '')
 		player = message.text.split()[2].lower()
+		player = encodeString(player)
 	userId = message.from_user.id
 	if realm and player:
 		try:
@@ -657,6 +661,7 @@ def sendArenaStats(message):
 		realm = message.text.split()[2].lower()
 		realm = realm.replace('\'', '')
 		player = message.text.split()[3].lower()
+		player = encodeString(player)
 	userId = message.from_user.id
 	if realm and player and bracket:
 		try:
@@ -742,6 +747,11 @@ def getProfilePic(region, locale, realm, player, token, chatId):
 		bot.send_photo(chatId, response)
 	else:
 		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
+
+def encodeString(infoToEncode):
+	infoToEncode = infoToEncode.lower()
+	infoToEncode = urllib.parse.quote(infoToEncode, encoding = None, safe = '')
+	return infoToEncode
 
 @app.route('/bot', methods = ['GET', 'POST'])
 def getMessage():
