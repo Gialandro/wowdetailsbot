@@ -3,6 +3,7 @@
 * @date: 12/03/2020
 * @description: Bot to get info of World of Warcraft
 """
+import sys
 import os
 import re
 import urllib
@@ -287,7 +288,7 @@ def sendGear(message):
 							itemId = player + '-' + item['slot'].get('type')
 							firstLine = '{} ({}){}'.format(item['name'], item['level']['display_string'], breakLine)
 							itemType = ''
-							if item.get('is_subclass_hidden') == None:
+							if item.get('is_subclass_hidden') != None:
 								itemType += '({})'.format(item['item_subclass'].get('name'))
 							secondLine = '{} {} - [{}]{}{}'.format(item['inventory_type']['name'], itemType, item['quality']['name'], breakLine, breakLine)
 							armor = ''
@@ -328,8 +329,10 @@ def sendGear(message):
 								if item['azerite_details'].get('selected_powers') != None:
 									powers = item['azerite_details'].get('selected_powers')
 									for detail in powers:
-										spellDetail = detail.get('spell_tooltip')
-										azeriteDetails += '- {}: {}{}'.format(spellDetail['spell'].get('name'), spellDetail.get('description'), breakLine)
+										if detail.get('spell_tooltip') != None:
+											spellDetail = detail.get('spell_tooltip')
+											azeriteDetails += '{}'.format(spellDetail)
+											# azeriteDetails += '- {}: {}{}'.format(spellDetail['spell'].get('name'), spellDetail.get('description'), breakLine)
 								elif item['azerite_details'].get('selected_essences') != None:
 									essences = item['azerite_details'].get('selected_essences')
 									azeriteDetails += 'Skills:{}'.format(breakLine)
@@ -419,6 +422,10 @@ def sendGear(message):
 		except requests.exceptions.ConnectionError as e:
 			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
+			if message.from_user.id == userAdmin:
+				trace_back = sys.exc_info()[2]
+				line = trace_back.tb_lineno
+				bot.send_message(message.chat.id, '({}): {} - {}'.format(type(e), e, line))
 			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
 		client.close()
 	else :
