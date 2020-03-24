@@ -118,7 +118,7 @@ def regionHandler(call):
 				wowTable.insert_one({'_id': int(info[1]), 'region': info[0], 'locale': '', 'username': info[2]})
 				bot.send_message(call.message.chat.id, 'Assigned region! ※\\(^o^)/※\nNow assign your /locale')
 		except Exception as e:
-			bot.send_message(call.message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
+			showCallError(call, e)
 		client.close()
 	else:
 		bot.send_message(call.message.chat.id, 'Operation cancelled (ㆆ _ ㆆ)')
@@ -148,7 +148,7 @@ def sendLocale(message):
 			else:
 				bot.send_message(message.chat.id, 'You need assign a Region before a Locale •`_´•')
 	except Exception as e:
-		bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
+		showError(message, e)
 	client.close()
 
 # * Locale callback
@@ -176,7 +176,7 @@ def localeHandler(call):
 				wowTable.update_one(query, updateRecord)
 				bot.send_message(call.message.chat.id, 'Assigned region!')
 		except Exception as e:
-			bot.send_message(call.message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
+			showCallError(call, e)
 		client.close()
 	else:
 		bot.send_message(call.message.chat.id, 'Operation cancelled (ㆆ _ ㆆ)')
@@ -209,7 +209,7 @@ def sendInfo(message):
 				# ? User not found
 				bot.send_message(message.chat.id, 'You don\'t have info assigned (´סּ︵סּ`)')
 	except Exception as e:
-		bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
+		showError(message, e)
 	client.close()
 
 # * Token Price method
@@ -245,7 +245,7 @@ def sendToken(message):
 	except requests.exceptions.ConnectionError as e:
 		bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 	except Exception as e:
-			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
+		showError(message, e)
 
 # * Character items method
 @bot.message_handler(commands = ['gear'])
@@ -288,7 +288,7 @@ def sendGear(message):
 							itemId = player + '-' + item['slot'].get('type')
 							firstLine = '{} ({}){}'.format(item['name'], item['level']['display_string'], breakLine)
 							itemType = ''
-							if item.get('is_subclass_hidden') != None:
+							if item.get('is_subclass_hidden') == None:
 								itemType += '({})'.format(item['item_subclass'].get('name'))
 							secondLine = '{} {} - [{}]{}{}'.format(item['inventory_type']['name'], itemType, item['quality']['name'], breakLine, breakLine)
 							armor = ''
@@ -326,14 +326,7 @@ def sendGear(message):
 								binding += '{}{}{}'.format(item['binding'].get('name'), breakLine, breakLine)
 							azeriteDetails = ''
 							if item.get('azerite_details') != None:
-								if item['azerite_details'].get('selected_powers') != None:
-									powers = item['azerite_details'].get('selected_powers')
-									for detail in powers:
-										if detail.get('spell_tooltip') != None:
-											spellDetail = detail.get('spell_tooltip')
-											azeriteDetails += '{}'.format(spellDetail)
-											# azeriteDetails += '- {}: {}{}'.format(spellDetail['spell'].get('name'), spellDetail.get('description'), breakLine)
-								elif item['azerite_details'].get('selected_essences') != None:
+								if item['azerite_details'].get('selected_essences') != None:
 									essences = item['azerite_details'].get('selected_essences')
 									azeriteDetails += 'Skills:{}'.format(breakLine)
 									for essence in essences:
@@ -422,11 +415,7 @@ def sendGear(message):
 		except requests.exceptions.ConnectionError as e:
 			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
-			if message.from_user.id == userAdmin:
-				trace_back = sys.exc_info()[2]
-				line = trace_back.tb_lineno
-				bot.send_message(message.chat.id, '({}): {} - {}'.format(type(e), e, line))
-			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
+			showError(message, e)
 		client.close()
 	else :
 		bot.send_message(message.chat.id, 'You need specify a realm and player •`_´•')
@@ -457,7 +446,7 @@ def gearHandler(call):
 					# ? Gear not found
 					bot.send_message(call.message.chat.id, 'Item not found (´סּ︵סּ`)')
 		except Exception as e:
-			bot.send_message(call.message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
+			showCallError(call, e)
 		client.close()
 	bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
 
@@ -599,7 +588,7 @@ def sendStats(message):
 		except requests.exceptions.ConnectionError as e:
 			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
-			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
+			showError(message, e)
 		client.close()
 	else :
 		bot.send_message(message.chat.id, 'You need specify a realm and player •`_´•')
@@ -653,7 +642,7 @@ def sendBGStats(message):
 		except requests.exceptions.ConnectionError as e:
 			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
-			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
+			showError(message, e)
 	else:
 		bot.send_message(message.chat.id, 'You need specify a realm and player •`_´•')
 
@@ -710,7 +699,7 @@ def sendArenaStats(message):
 		except requests.exceptions.ConnectionError as e:
 			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
-			bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(e), e))
+			showError(message, e)
 	else:
 		bot.send_message(message.chat.id, 'You need specify a realm, player and bracket •`_´•')
 
@@ -727,7 +716,7 @@ def sendAdminData(message):
 			msg = 'Id: {}\nRegion: {}\nLocale: {}\nUsername: {}\n'.format(record.get('_id'), record.get('region'), record.get('locale'), record.get('username'))
 			bot.send_message(message.chat.id, text = msg)
 	else:
-		bot.send_message(message.chat.id, text='You are not the admin •`_´•')
+		bot.send_message(message.chat.id, 'You are not the admin •`_´•')
 
 def createAccessToken(region):
 	url = "https://{}.battle.net/oauth/token".format(region)
@@ -759,6 +748,20 @@ def encodeString(infoToEncode):
 	infoToEncode = infoToEncode.lower()
 	infoToEncode = urllib.parse.quote(infoToEncode, encoding = None, safe = '')
 	return infoToEncode
+
+def showError(message, error):
+	if message.from_user.id == userAdmin:
+		trace_back = sys.exc_info()[2]
+		line = trace_back.tb_lineno
+		bot.send_message(message.chat.id, '({}): {} - {}'.format(type(error), error, line))
+	bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(error), error))
+
+def showCallError(call, error):
+	if call.message.from_user.id == userAdmin:
+		trace_back = sys.exc_info()[2]
+		line = trace_back.tb_lineno
+		bot.send_message(call.message.chat.id, '({}): {} - {}'.format(type(error), error, line))
+	bot.send_message(call.message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(error), error))
 
 @app.route('/bot', methods = ['GET', 'POST'])
 def getMessage():
