@@ -130,12 +130,13 @@ def sendLocale(message):
 	userId = message.from_user.id
 	username = message.from_user.username
 	markup = telebot.types.InlineKeyboardMarkup()
-	client = pymongo.MongoClient(dbUri)
-	wowDb = client[dbName]
-	wowTable = wowDb[tableName]
+	# client = pymongo.MongoClient(dbUri)
+	# wowDb = client[dbName]
+	# wowTable = wowDb[tableName]
 	try:
 		query = {'_id': userId, 'region': {'$regex': '.{2}'}}
-		result = wowTable.find(query)
+		result = getInfoDB(tableName, query)
+		# result = wowTable.find(query)
 		for record in result:
 			if record:
 				localeList = []
@@ -149,7 +150,7 @@ def sendLocale(message):
 				bot.send_message(message.chat.id, 'You need assign a Region before a Locale •`_´•')
 	except Exception as e:
 		showError(message, e)
-	client.close()
+	# client.close()
 
 # * Locale callback
 @bot.callback_query_handler(func = lambda call: re.match('^locale:', call.data))
@@ -186,12 +187,13 @@ def localeHandler(call):
 @bot.message_handler(commands = ['info'])
 def sendInfo(message):
 	userId = message.from_user.id
-	client = pymongo.MongoClient(dbUri)
-	wowDb = client[dbName]
-	wowTable = wowDb[tableName]
+	# client = pymongo.MongoClient(dbUri)
+	# wowDb = client[dbName]
+	# wowTable = wowDb[tableName]
 	try:
 		query = {'_id': userId}
-		result = wowTable.find(query)
+		result = getInfoDB(tableName, query)
+		# result = wowTable.find(query)
 		for record in result:
 			if record:
 				# ? User found
@@ -210,18 +212,19 @@ def sendInfo(message):
 				bot.send_message(message.chat.id, 'You don\'t have info assigned (´סּ︵סּ`)')
 	except Exception as e:
 		showError(message, e)
-	client.close()
+	# client.close()
 
 # * Token Price method
 @bot.message_handler(commands = ['token'])
 def sendToken(message):
 	userId = message.from_user.id
 	try:
-		client = pymongo.MongoClient(dbUri)
-		wowDb = client[dbName]
-		wowTable = wowDb[tableName]
+		# client = pymongo.MongoClient(dbUri)
+		# wowDb = client[dbName]
+		# wowTable = wowDb[tableName]
 		query = {'_id': userId}
-		result = wowTable.find(query)
+		result = getInfoDB(tableName, query)
+		# result = wowTable.find(query)
 		bot.send_message(message.chat.id, 'Calculating... ಠ_ರೃ')
 		for record in result:
 			if record.get('region') != None and record.get('locale') != None:
@@ -241,7 +244,7 @@ def sendToken(message):
 				bot.send_message(message.chat.id, 'You need assign your region')
 			elif record.get('locale') == None:
 				bot.send_message(message.chat.id, 'You need assign your locale')
-		client.close()
+		# client.close()
 	except requests.exceptions.ConnectionError as e:
 		bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 	except Exception as e:
@@ -261,13 +264,14 @@ def sendGear(message):
 	breakLine = '\n'
 	if realm and player:
 		try:
+			recordList = []
 			client = pymongo.MongoClient(dbUri + pathModify)
 			wowDb = client[dbName]
-			wowTable = wowDb[tableName]
+			# wowTable = wowDb[tableName]
 			wowTableGear = wowDb[tableGear]
 			query = {'_id': userId}
-			recordList = []
-			result = wowTable.find(query)
+			result = getInfoDB(tableName, query)
+			# result = wowTable.find(query)
 			bot.send_message(message.chat.id, 'Searching... ಠ_ರೃ')
 			markup = telebot.types.InlineKeyboardMarkup()
 			equipment = []
@@ -426,13 +430,13 @@ def gearHandler(call):
 	gear = call.data[5:]
 	if gear != 'close':
 		client = pymongo.MongoClient(dbUri)
-		wowDb = client[dbName]
-		wowTable = wowDb[tableGear]
+		# wowDb = client[dbName]
+		# wowTable = wowDb[tableGear]
 		bot.answer_callback_query(callback_query_id = call.id, text = 'Option accepted •`_´•')
 		try:
 			query = {'item': gear}
-			result = ''
-			result = wowTable.find(query)
+			result = getInfoDB(tableGear, query)
+			# result = wowTable.find(query)
 			for record in result:
 				if record:
 					# ? Gear found
@@ -463,11 +467,12 @@ def sendStats(message):
 	userId = message.from_user.id
 	if realm and player:
 		try:
-			client = pymongo.MongoClient(dbUri)
-			wowDb = client[dbName]
-			wowTable = wowDb[tableName]
+			# client = pymongo.MongoClient(dbUri)
+			# wowDb = client[dbName]
+			# wowTable = wowDb[tableName]
 			query = {'_id': userId}
-			result = wowTable.find(query)
+			result = getInfoDB(tableName, query)
+			# result = wowTable.find(query)
 			bot.send_message(message.chat.id, 'Searching... ಠ_ರೃ')
 			for record in result:
 				blizzSession = createAccessToken(record['region'])
@@ -589,7 +594,7 @@ def sendStats(message):
 			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
 			showError(message, e)
-		client.close()
+		# client.close()
 	else :
 		bot.send_message(message.chat.id, 'You need specify a realm and player •`_´•')
 
@@ -606,11 +611,12 @@ def sendBGStats(message):
 	userId = message.from_user.id
 	if realm and player:
 		try:
-			client = pymongo.MongoClient(dbUri)
-			wowDb = client[dbName]
-			wowTable = wowDb[tableName]
+			# client = pymongo.MongoClient(dbUri)
+			# wowDb = client[dbName]
+			# wowTable = wowDb[tableName]
 			query = {'_id': userId}
-			result = wowTable.find(query)
+			result = getInfoDB(tableName, query)
+			# result = wowTable.find(query)
 			bot.send_message(message.chat.id, 'Searching... ಠ_ರೃ')
 			for record in result:
 				blizzSession = createAccessToken(record['region'])
@@ -661,11 +667,12 @@ def sendArenaStats(message):
 	userId = message.from_user.id
 	if realm and player and bracket:
 		try:
-			client = pymongo.MongoClient(dbUri)
-			wowDb = client[dbName]
-			wowTable = wowDb[tableName]
+			# client = pymongo.MongoClient(dbUri)
+			# wowDb = client[dbName]
+			# wowTable = wowDb[tableName]
 			query = {'_id': userId}
-			result = wowTable.find(query)
+			result = getInfoDB(tableName, query)
+			# result = wowTable.find(query)
 			bot.send_message(message.chat.id, 'Searching... ಠ_ರೃ')
 			for record in result:
 				blizzSession = createAccessToken(record['region'])
@@ -707,14 +714,17 @@ def sendArenaStats(message):
 def sendAdminData(message):
 	bot.send_message(message.chat.id, 'Checking... ಠ_ರೃ')
 	if message.from_user.id == userAdmin:
-		client = pymongo.MongoClient(dbUri)
-		wowDb = client[dbName]
-		adminTable = wowDb[tableAdmin]
-		query = {}
-		result = adminTable.find(query)
-		for record in result:
-			msg = 'Id: {}\nRegion: {}\nLocale: {}\nUsername: {}\n'.format(record.get('_id'), record.get('region'), record.get('locale'), record.get('username'))
-			bot.send_message(message.chat.id, text = msg)
+		try:
+			query = {}
+			result = getInfoDB(tableAdmin, query)
+			totalRecords = 0
+			for record in result:
+				msg = 'Id: {}\nRegion: {}\nLocale: {}\nUsername: {}\n'.format(record.get('_id'), record.get('region'), record.get('locale'), record.get('username'))
+				totalRecords += 1
+				bot.send_message(message.chat.id, msg)
+			bot.send_message(message.chat.id, '{} records founds (◕ᴥ◕ʋ)'.format(totalRecords))
+		except Exception as e:
+			showError(message, e)
 	else:
 		bot.send_message(message.chat.id, 'You are not the admin •`_´•')
 
@@ -762,6 +772,14 @@ def showCallError(call, error):
 		line = trace_back.tb_lineno
 		bot.send_message(call.message.chat.id, '({}): {} - {}'.format(type(error), error, line))
 	bot.send_message(call.message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(error), error))
+
+def getInfoDB(tableName, query):
+	client = pymongo.MongoClient(dbUri)
+	wowDb = client[dbName]
+	wowTable = wowDb[tableName]
+	result = wowTable.find(query)
+	client.close()
+	return result
 
 @app.route('/bot', methods = ['GET', 'POST'])
 def getMessage():
