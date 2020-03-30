@@ -710,6 +710,69 @@ def sendArenaStats(message):
 	else:
 		bot.send_message(message.chat.id, 'You need specify a realm, player and bracket •`_´•')
 
+# * Character mythic keystone stats method
+@bot.message_handler(commands=['mythic'])
+def sendMythicKeystone(message):
+	realm = None
+	player = None
+	if len(message.text.split()) == 3:
+		realm = message.text.split()[1].lower()
+		realm = realm.replace('\'', '')
+		player = message.text.split()[2].lower()
+		player = encodeString(player)
+	userId = message.from_user.id
+	if realm and player:
+		try:
+			query = {'_id': userId}
+			result = getInfoDB(tableName, query)
+			bot.send_message(message.chat.id, 'Searching... ಠ_ರೃ')
+			for record in result:
+				blizzSession = createAccessToken(record['region'])
+				url = 'https://{}.api.blizzard.com/profile/wow/character/{}/{}/mythic-keystone-profile'.format(record['region'], realm, player)
+				params = {
+					'namespace': 'profile-{}'.format(record['region']),
+					'locale': record['locale'],
+					'access_token': blizzSession['access_token']
+				}
+				response = requests.get(url, params = params)
+				statusCode = response.status_code
+				response = response.json()
+				if statusCode != 404 and statusCode != 403:
+					# ! Profile image
+					getProfilePic(record['region'], record['locale'], realm, player, blizzSession['access_token'], message.chat.id)
+					mythicData = ''
+					if response.get('character') != None:
+						player = response.get('character')
+						mythicData += '{} - {}\n'.format(player.get('name'), player['realm'].get('name'))
+					if response.get('seasons') != None:
+						seasons = response.get('seasons')
+						for season in seasons:
+							mythicData += 'Season: {}\n'.format(season.get('id'))
+					if response['current_period'].get('best_runs') != None:
+						mythicData += 'Mythics:\n'
+						dungeons = response['current_period'].get('best_runs')
+						for dungeon in dungeons:
+							mythicData += '\n{} - Mythic +{}\n'.format(dungeon['dungeon'].get('name'), dungeon.get('keystone_level'))
+							mythicData += 'Duration: {}\n'.format(sendDuration(dungeon.get('duration')))
+							lastRun = int(dungeon.get('completed_timestamp')) / 1000
+							lastRun = datetime.fromtimestamp(lastRun)
+							mythicData += 'Last run: {}\n'.format(lastRun)
+							mythicData += 'Completed within time: {}\n'.format(dungeon.get('is_completed_within_time'))
+							if dungeon.get('keystone_affixes') != None:
+								mythicData += 'Affixes:\n'
+								affixes = dungeon.get('keystone_affixes')
+								for affixe in affixes:
+									mythicData += '- {}\n'.format(affixe.get('name'))
+						bot.send_message(message.chat.id, mythicData)
+				else:
+					bot.send_message(message.chat.id, 'No result ☉ ‿ ⚆')
+		except requests.exceptions.ConnectionError as e:
+			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
+		except Exception as e:
+			showError(message, e)
+	else:
+		bot.send_message(message.chat.id, 'You need specify a realm and player •`_´•')
+
 @bot.message_handler(commands = ['data'])
 def sendAdminData(message):
 	bot.send_message(message.chat.id, 'Checking... ಠ_ರೃ')
@@ -780,6 +843,20 @@ def getInfoDB(tableName, query):
 	result = wowTable.find(query)
 	client.close()
 	return result
+
+def sendDuration(millisTime):
+	duration = ''
+	millis = int(millisTime)
+	seconds = (millis / 1000) % 60
+	seconds = int(seconds)
+	minutes = (millis / (1000 * 60)) % 60
+	minutes = int(minutes)
+	hours = (millis / (1000 * 60 * 60)) % 24
+	if hours < 1:
+		duration = '{}m {}s'.format(minutes, seconds)
+	else:
+		duration = '{}h {}m {}s'.format(hours, minutes, seconds)
+	return duration
 
 @app.route('/bot', methods = ['GET', 'POST'])
 def getMessage():
