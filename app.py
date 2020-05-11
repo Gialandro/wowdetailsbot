@@ -87,7 +87,7 @@ def sendRegion(message):
 	markup = telebot.types.InlineKeyboardMarkup()
 	regionList = []
 	for region in regions:
-		regionList.append(telebot.types.InlineKeyboardButton(text = region, callback_data = 'region:{}-{}-{}'.format(region, userId, username)))
+		regionList.append(telebot.types.InlineKeyboardButton(text = region, callback_data = f'region:{region}-{userId}-{username}'))
 	regionList = numpy.array(regionList).reshape(-1, 2)
 	for item in regionList:
 		markup.row(item[0], item[1])
@@ -130,18 +130,14 @@ def sendLocale(message):
 	userId = message.from_user.id
 	username = message.from_user.username
 	markup = telebot.types.InlineKeyboardMarkup()
-	# client = pymongo.MongoClient(dbUri)
-	# wowDb = client[dbName]
-	# wowTable = wowDb[tableName]
 	try:
 		query = {'_id': userId, 'region': {'$regex': '.{2}'}}
 		result = getInfoDB(tableName, query)
-		# result = wowTable.find(query)
 		for record in result:
 			if record:
 				localeList = []
 				for locale in locales.get(record.get('region')):
-					localeList.append(telebot.types.InlineKeyboardButton(text = locale, callback_data = 'locale:{}-{}-{}'.format(locale, userId, username)))
+					localeList.append(telebot.types.InlineKeyboardButton(text = locale, callback_data = f'locale:{locale}-{userId}-{username}'))
 				localeList = numpy.array(localeList).reshape(-1, 2)
 				for item in localeList:
 					markup.row(item[0], item[1])
@@ -150,7 +146,6 @@ def sendLocale(message):
 				bot.send_message(message.chat.id, 'You need assign a Region before a Locale •`_´•')
 	except Exception as e:
 		showError(message, e)
-	# client.close()
 
 # * Locale callback
 @bot.callback_query_handler(func = lambda call: re.match('^locale:', call.data))
@@ -198,10 +193,10 @@ def sendInfo(message):
 			if record:
 				# ? User found
 				if record.get('region') != None and record.get('locale') != None:
-					bot.send_message(message.chat.id, '''Data assigned:
-					Region - {}
-					Locale - {}
-					'''.format(record['region'], record['locale']))
+					bot.send_message(message.chat.id, f'''Data assigned:
+					Region - {record['region']}
+					Locale - {record['locale']}
+					''')
 				# ? Info incomplete
 				elif record.get('region') == None:
 					bot.send_message(message.chat.id, 'Region not found')
@@ -239,7 +234,7 @@ def sendToken(message):
 				response = response.json()
 				price = str(response['price'])[:-4]
 				output = '{:,}'.format(int(price))
-				bot.send_message(message.chat.id, '{} 🌕'.format(output))
+				bot.send_message(message.chat.id, f'{output} 🌕')
 			elif record.get('region') == None:
 				bot.send_message(message.chat.id, 'You need assign your region')
 			elif record.get('locale') == None:
@@ -335,9 +330,9 @@ def sendGear(message):
 									azeriteDetails += 'Skills:{}'.format(breakLine)
 									for essence in essences:
 										if essence.get('main_spell_tooltip') != None:
-											azeriteDetails += 'Active: {}{}'.format(essence['main_spell_tooltip']['spell'].get('name'), breakLine)
+											azeriteDetails += '- Act: {}{}'.format(essence['main_spell_tooltip']['spell'].get('name'), breakLine)
 										elif essence.get('passive_spell_tooltip') != None:
-											azeriteDetails += 'Passive: {}{}'.format(essence['passive_spell_tooltip']['spell'].get('name'), breakLine)
+											azeriteDetails += '- Pas: {}{}'.format(essence['passive_spell_tooltip']['spell'].get('name'), breakLine)
 								azeriteDetails += '{}'.format(breakLine)
 							lastLine = ''
 							if armor != '':
@@ -413,7 +408,7 @@ def sendGear(message):
 							bot.send_message(message.chat.id, text = 'Player: {}\nRealm: {}\nEquiped items: {}'.format(player.capitalize(), realm.capitalize(), len(response['equipped_items'])), reply_markup = markup)
 						wowTableGear.bulk_write(recordList)
 					else:
-						bot.send_message(message.chat.id, '{} has no equipment ¯\\_(ツ)_/¯'.format(player.capitalize()))
+						bot.send_message(message.chat.id, f'{player.capitalize()} has no equipment ¯\\_(ツ)_/¯')
 				else:
 					bot.send_message(message.chat.id, 'Player not found ☉ ‿ ⚆')
 		except requests.exceptions.ConnectionError as e:
@@ -430,13 +425,10 @@ def gearHandler(call):
 	gear = call.data[5:]
 	if gear != 'close':
 		client = pymongo.MongoClient(dbUri)
-		# wowDb = client[dbName]
-		# wowTable = wowDb[tableGear]
 		bot.answer_callback_query(callback_query_id = call.id, text = 'Option accepted •`_´•')
 		try:
 			query = {'item': gear}
 			result = getInfoDB(tableGear, query)
-			# result = wowTable.find(query)
 			for record in result:
 				if record:
 					# ? Gear found
@@ -467,12 +459,8 @@ def sendStats(message):
 	userId = message.from_user.id
 	if realm and player:
 		try:
-			# client = pymongo.MongoClient(dbUri)
-			# wowDb = client[dbName]
-			# wowTable = wowDb[tableName]
 			query = {'_id': userId}
 			result = getInfoDB(tableName, query)
-			# result = wowTable.find(query)
 			bot.send_message(message.chat.id, 'Searching... ಠ_ರೃ')
 			for record in result:
 				blizzSession = createAccessToken(record['region'])
@@ -594,7 +582,6 @@ def sendStats(message):
 			bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 		except Exception as e:
 			showError(message, e)
-		# client.close()
 	else :
 		bot.send_message(message.chat.id, 'You need specify a realm and player •`_´•')
 
@@ -611,12 +598,8 @@ def sendBGStats(message):
 	userId = message.from_user.id
 	if realm and player:
 		try:
-			# client = pymongo.MongoClient(dbUri)
-			# wowDb = client[dbName]
-			# wowTable = wowDb[tableName]
 			query = {'_id': userId}
 			result = getInfoDB(tableName, query)
-			# result = wowTable.find(query)
 			bot.send_message(message.chat.id, 'Searching... ಠ_ರೃ')
 			for record in result:
 				blizzSession = createAccessToken(record['region'])
@@ -667,12 +650,8 @@ def sendArenaStats(message):
 	userId = message.from_user.id
 	if realm and player and bracket:
 		try:
-			# client = pymongo.MongoClient(dbUri)
-			# wowDb = client[dbName]
-			# wowTable = wowDb[tableName]
 			query = {'_id': userId}
 			result = getInfoDB(tableName, query)
-			# result = wowTable.find(query)
 			bot.send_message(message.chat.id, 'Searching... ಠ_ರೃ')
 			for record in result:
 				blizzSession = createAccessToken(record['region'])
@@ -710,8 +689,8 @@ def sendArenaStats(message):
 	else:
 		bot.send_message(message.chat.id, 'You need specify a realm, player and bracket •`_´•')
 
-# * Character mythic keystone stats method
-@bot.message_handler(commands=['mythic'])
+# * Character mythic keystone runs method
+@bot.message_handler(commands=['myth'])
 def sendMythicKeystone(message):
 	realm = None
 	player = None
@@ -763,7 +742,9 @@ def sendMythicKeystone(message):
 								affixes = dungeon.get('keystone_affixes')
 								for affixe in affixes:
 									mythicData += '- {}\n'.format(affixe.get('name'))
-						bot.send_message(message.chat.id, mythicData)
+					else:
+						mythicData += '\nNo mythics found this week ☉ ‿ ⚆'
+					bot.send_message(message.chat.id, mythicData)
 				else:
 					bot.send_message(message.chat.id, 'No result ☉ ‿ ⚆')
 		except requests.exceptions.ConnectionError as e:
@@ -775,7 +756,7 @@ def sendMythicKeystone(message):
 
 @bot.message_handler(commands = ['data'])
 def sendAdminData(message):
-	bot.send_message(message.chat.id, 'Checking... ಠ_ರೃ')
+	bot.send_message(message.chat.id, 'Wolololo... ಠ_ರೃ')
 	if message.from_user.id == userAdmin:
 		try:
 			query = {}
@@ -785,7 +766,7 @@ def sendAdminData(message):
 				msg = 'Id: {}\nRegion: {}\nLocale: {}\nUsername: {}\n'.format(record.get('_id'), record.get('region'), record.get('locale'), record.get('username'))
 				totalRecords += 1
 				bot.send_message(message.chat.id, msg)
-			bot.send_message(message.chat.id, '{} records founds (◕ᴥ◕ʋ)'.format(totalRecords))
+			bot.send_message(message.chat.id, f'{totalRecords} records founds (◕ᴥ◕ʋ)')
 		except Exception as e:
 			showError(message, e)
 	else:
@@ -826,15 +807,15 @@ def showError(message, error):
 	if message.from_user.id == userAdmin:
 		trace_back = sys.exc_info()[2]
 		line = trace_back.tb_lineno
-		bot.send_message(message.chat.id, '({}): {} - {}'.format(type(error), error, line))
-	bot.send_message(message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(error), error))
+		bot.send_message(message.chat.id, f'({type(error)}): {error} - {line}')
+	bot.send_message(message.chat.id, f'¯\\_(ツ)_/¯ Error... ({type(error)}): {error}')
 
 def showCallError(call, error):
 	if call.message.from_user.id == userAdmin:
 		trace_back = sys.exc_info()[2]
 		line = trace_back.tb_lineno
-		bot.send_message(call.message.chat.id, '({}): {} - {}'.format(type(error), error, line))
-	bot.send_message(call.message.chat.id, '¯\\_(ツ)_/¯ Error... ({}): {}'.format(type(error), error))
+		bot.send_message(call.message.chat.id, f'({type(error)}): {error} - {line}')
+	bot.send_message(call.message.chat.id, f'¯\\_(ツ)_/¯ Error... ({type(error)}): {error}')
 
 def getInfoDB(tableName, query):
 	client = pymongo.MongoClient(dbUri)
