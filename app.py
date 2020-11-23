@@ -26,7 +26,8 @@ tableGear = os.getenv('tableGear')
 tableAdmin = os.getenv('tableAdmin')
 userAdmin = int(os.getenv('adminUser'))
 bot = telebot.TeleBot(tgTkn, threaded=False)
-pathModify = '?retryWrites=false'
+pathModify = '?retryWrites=true&w=majority'
+# pathModify = '?retryWrites=false'
 
 clientId = os.getenv('blizzId')
 clientSecret = os.getenv('blizzSecret')
