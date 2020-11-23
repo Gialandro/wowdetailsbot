@@ -183,13 +183,9 @@ def localeHandler(call):
 @bot.message_handler(commands = ['info'])
 def sendInfo(message):
 	userId = message.from_user.id
-	# client = pymongo.MongoClient(dbUri)
-	# wowDb = client[dbName]
-	# wowTable = wowDb[tableName]
 	try:
 		query = {'_id': userId}
 		result = getInfoDB(tableName, query)
-		# result = wowTable.find(query)
 		for record in result:
 			if record:
 				# ? User found
@@ -208,19 +204,14 @@ def sendInfo(message):
 				bot.send_message(message.chat.id, 'You don\'t have info assigned (´סּ︵סּ`)')
 	except Exception as e:
 		showError(message, e)
-	# client.close()
 
 # * Token Price method
 @bot.message_handler(commands = ['token'])
 def sendToken(message):
 	userId = message.from_user.id
 	try:
-		# client = pymongo.MongoClient(dbUri)
-		# wowDb = client[dbName]
-		# wowTable = wowDb[tableName]
 		query = {'_id': userId}
 		result = getInfoDB(tableName, query)
-		# result = wowTable.find(query)
 		bot.send_message(message.chat.id, 'Calculating... ಠ_ರೃ')
 		for record in result:
 			if record.get('region') != None and record.get('locale') != None:
@@ -240,7 +231,6 @@ def sendToken(message):
 				bot.send_message(message.chat.id, 'You need assign your region')
 			elif record.get('locale') == None:
 				bot.send_message(message.chat.id, 'You need assign your locale')
-		# client.close()
 	except requests.exceptions.ConnectionError as e:
 		bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 	except Exception as e:
@@ -263,11 +253,9 @@ def sendGear(message):
 			recordList = []
 			client = pymongo.MongoClient(dbUri + pathModify)
 			wowDb = client[dbName]
-			# wowTable = wowDb[tableName]
 			wowTableGear = wowDb[tableGear]
 			query = {'_id': userId}
 			result = getInfoDB(tableName, query)
-			# result = wowTable.find(query)
 			bot.send_message(message.chat.id, 'Searching... ಠ_ರೃ')
 			markup = telebot.types.InlineKeyboardMarkup()
 			equipment = []
@@ -476,7 +464,7 @@ def sendStats(message):
 				response = response.json()
 				if statusCode != 404:
 					# ! Profile image
-					getProfilePic(record['region'], record['locale'], realm, player, blizzSession['access_token'], message.chat.id)
+					# getProfilePic(record['region'], record['locale'], realm, player, blizzSession['access_token'], message.chat.id)
 					# ! Player summary structure
 					urlSummary = 'https://{}.api.blizzard.com/profile/wow/character/{}/{}'.format(record['region'], realm, player)
 					summaryResponse = requests.get(urlSummary, params = params)
