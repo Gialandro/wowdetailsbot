@@ -464,7 +464,7 @@ def sendStats(message):
 				response = response.json()
 				if statusCode != 404:
 					# ! Profile image
-					# getProfilePic(record['region'], record['locale'], realm, player, blizzSession['access_token'], message.chat.id)
+					getProfilePic(record['region'], record['locale'], realm, player, blizzSession['access_token'], message.chat.id)
 					# ! Player summary structure
 					urlSummary = 'https://{}.api.blizzard.com/profile/wow/character/{}/{}'.format(record['region'], realm, player)
 					summaryResponse = requests.get(urlSummary, params = params)
@@ -771,7 +771,7 @@ def createAccessToken(region):
 	return response.json()
 
 def getProfilePic(region, locale, realm, player, token, chatId):
-	path = 'https://{}.api.blizzard.com/profile/wow/character/{}/{}/character-media'.format(region, realm, player)
+	path = 'https://{}.api.blizzard.com/profile/wow/character/{}/{}/character-media'.format(region, realm, player.lower())
 	params = {
 		'namespace': 'profile-{}'.format(region),
 		'locale': locale,
@@ -780,10 +780,12 @@ def getProfilePic(region, locale, realm, player, token, chatId):
 	response = requests.get(path, params = params)
 	status = response.status_code
 	response = response.json()
-	response = response.get('bust_url')
+	response = response.get('assets')
+	response = response[1].get('value')
 	if status != 404:
-		bot.send_chat_action(chatId, 'upload_photo')
-		bot.send_photo(chatId, response)
+		# bot.send_chat_action(chatId, 'upload_photo')
+		# bot.send_photo(chatId, response)
+		bot.send_message(message.chat.id, response)
 	else:
 		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
 
