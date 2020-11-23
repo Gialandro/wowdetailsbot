@@ -745,7 +745,7 @@ def sendMythicKeystone(message):
 
 @bot.message_handler(commands = ['data'])
 def sendAdminData(message):
-	bot.send_message(message.chat.id, 'Wolololo... ಠ_ರೃ')
+	bot.send_message(message.chat.id, 'Searching Data... ಠ_ರೃ')
 	if message.from_user.id == userAdmin:
 		try:
 			query = {}
@@ -785,7 +785,7 @@ def getProfilePic(region, locale, realm, player, token, chatId):
 	if status != 404:
 		# bot.send_chat_action(chatId, 'upload_photo')
 		# bot.send_photo(chatId, response)
-		bot.send_message(message.chat.id, response)
+		bot.send_message(chatId, response)
 	else:
 		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
 
