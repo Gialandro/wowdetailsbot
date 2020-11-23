@@ -785,7 +785,6 @@ def getProfilePic(region, locale, realm, player, token, chatId):
 	if status != 404:
 		bot.send_chat_action(chatId, 'upload_photo')
 		bot.send_photo(chatId, response)
-		bot.send_message(chatId, response)
 	else:
 		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
 
