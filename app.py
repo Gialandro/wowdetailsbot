@@ -764,7 +764,14 @@ def sendExpansions(message):
 				}
 				response = requests.get(url, params = params)
 				response = response.json()
-				bot.send_message(message.chat.id, f'{response}')
+				response = response.get('tiers')
+				expansions = ''
+				for exp in response:
+					if expansions != '':
+						expansions = f'{expansions}\n'
+					else:
+						expansions = f'{exp}'
+				bot.send_message(message.chat.id, f'{expansions}')
 			elif record.get('region') == None:
 				bot.send_message(message.chat.id, 'You need assign your region')
 			elif record.get('locale') == None:
