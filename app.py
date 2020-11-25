@@ -743,6 +743,35 @@ def sendMythicKeystone(message):
 	else:
 		bot.send_message(message.chat.id, 'You need specify a realm and player •`_´•')
 
+# * Expansions Encounters method (Dungeons and raids)
+@bot.message_handler(commands=['expansions'])
+def sendExpansions:
+	userId = message.from_user.id
+	try:
+		query = {'_id': userId}
+		result = getInfoDB(tableName, query)
+		bot.send_message(message.chat.id, 'Calculating... ಠ_ರೃ')
+		for record in result:
+			if record.get('region') != None and record.get('locale') != None:
+				blizzSession = createAccessToken(record['region'])
+				url = 'https://{}.api.blizzard.com/data/wow/journal-expansion/index'.format(record['region'])
+				params = {
+					'namespace': 'static-{}'.format(record['region']),
+					'locale': record['locale'],
+					'access_token': blizzSession['access_token']
+				}
+				response = requests.get(url, params = params)
+				response = response.json()
+				bot.send_message(message.chat.id, f'{response}')
+			elif record.get('region') == None:
+				bot.send_message(message.chat.id, 'You need assign your region')
+			elif record.get('locale') == None:
+				bot.send_message(message.chat.id, 'You need assign your locale')
+	except requests.exceptions.ConnectionError as e:
+		bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
+	except Exception as e:
+		showError(message, e)
+
 @bot.message_handler(commands = ['data'])
 def sendAdminData(message):
 	bot.send_message(message.chat.id, 'Searching Data... ಠ_ರೃ')
