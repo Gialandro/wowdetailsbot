@@ -78,6 +78,8 @@ def startMessage(message):
 	/arena [bracket] [realm] [character] - Get bracket statistics of a character
 		brackets = (2v2, 3v3, 5v5)
 		Example: /arena 2v2 ragnaros nysler
+	/myth [realm] [character] - Get Mythic dungeons completed of a character
+		Example: /myth ragnaros nysler
 	''')
 
 # ? Region method
@@ -745,7 +747,7 @@ def sendMythicKeystone(message):
 
 # * Expansions Encounters method (Dungeons and raids)
 @bot.message_handler(commands=['expansions'])
-def sendExpansions:
+def sendExpansions(message):
 	userId = message.from_user.id
 	try:
 		query = {'_id': userId}
