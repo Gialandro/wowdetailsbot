@@ -49,7 +49,7 @@ locales = {
 # ? Start method
 @bot.message_handler(commands = ['start', 'help'])
 def startMessage(message):
-	bot.send_message(message.chat.id, '''This bot get info from World of Warcraft.
+	bot.send_message(message.chat.id, text = '''This bot get info from World of Warcraft.
 	Author: @Gialandro
 	Github: https://github.com/Gialandro/wowdetailsbot
 
@@ -57,30 +57,30 @@ def startMessage(message):
 
 		Set your region and locale to get data from your region and language, use this commands:
 
-	/region - Set or update the region of requests
+	» /region - Set or update the region of requests
 		(us, eu, kr)
 
-	/locale - Set or update the locale of requests depending on your Region
+	» /locale - Set or update the locale of requests depending on your Region
 		us = (en_US, es_MX, pt_BR)
 		eu = (en_GB, es_ES, fr_FR, ru_RU, de_DE, pt_PT, it_IT)
 		kr = (ko_KR)
 
-	/info - Get your actual Region and Locale assigned
+	» /info - Get your actual Region and Locale assigned
 
 	Whith your region and locale assigned you can use this commands:
-	/token - Get the actual token price
-	/gear [realm] [character] - Get the current gear of a character
+	» /token - Get the actual token price
+	» /gear [realm] [character] - Get the current gear of a character
 		Example: /gear ragnaros nysler
-	/stats [realm] [character] - Get all the statistics of a character
+	» /stats [realm] [character] - Get all the statistics of a character
 		Example: /stats ragnaros nysler
-	/bg [realm] [character] - Get Battleground statistics of a character
+	» /bg [realm] [character] - Get Battleground statistics of a character
 		Example: /bg ragnaros nysler
-	/arena [bracket] [realm] [character] - Get bracket statistics of a character
+	» /arena [bracket] [realm] [character] - Get bracket statistics of a character
 		brackets = (2v2, 3v3, 5v5)
 		Example: /arena 2v2 ragnaros nysler
-	/myth [realm] [character] - Get Mythic dungeons completed of a character
+	» /myth [realm] [character] - Get Mythic dungeons completed of a character
 		Example: /myth ragnaros nysler
-	''')
+	''', disable_web_page_preview = True)
 
 # ? Region method
 @bot.message_handler(commands = ['region'])
@@ -181,7 +181,7 @@ def localeHandler(call):
 		bot.send_message(call.message.chat.id, 'Operation cancelled (ㆆ _ ㆆ)')
 	bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
 
-# * Info method
+# ? Info method
 @bot.message_handler(commands = ['info'])
 def sendInfo(message):
 	userId = message.from_user.id
@@ -207,7 +207,7 @@ def sendInfo(message):
 	except Exception as e:
 		showError(message, e)
 
-# * Token Price method
+# ? Token Price method
 @bot.message_handler(commands = ['token'])
 def sendToken(message):
 	userId = message.from_user.id
@@ -238,7 +238,7 @@ def sendToken(message):
 	except Exception as e:
 		showError(message, e)
 
-# * Character items method
+# ? Character items method
 @bot.message_handler(commands = ['gear'])
 def sendGear(message):
 	realm = None
@@ -437,7 +437,7 @@ def gearHandler(call):
 		client.close()
 	bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
 
-# * Character stats method
+# ? Character stats method
 @bot.message_handler(commands = ['stats'])
 def sendStats(message):
 	realm = None
@@ -576,7 +576,7 @@ def sendStats(message):
 	else :
 		bot.send_message(message.chat.id, 'You need specify a realm and player •`_´•')
 
-# * Character BG stats method
+# ? Character BG stats method
 @bot.message_handler(commands = ['bg'])
 def sendBGStats(message):
 	realm = None
@@ -626,7 +626,7 @@ def sendBGStats(message):
 	else:
 		bot.send_message(message.chat.id, 'You need specify a realm and player •`_´•')
 
-# * Character arena stats method
+# ? Character arena stats method
 @bot.message_handler(commands = ['arena'])
 def sendArenaStats(message):
 	bracket = None
@@ -680,7 +680,7 @@ def sendArenaStats(message):
 	else:
 		bot.send_message(message.chat.id, 'You need specify a realm, player and bracket •`_´•')
 
-# * Character mythic keystone runs method
+# ? Character mythic keystone runs method
 @bot.message_handler(commands=['myth'])
 def sendMythicKeystone(message):
 	realm = None
@@ -745,14 +745,14 @@ def sendMythicKeystone(message):
 	else:
 		bot.send_message(message.chat.id, 'You need specify a realm and player •`_´•')
 
-# * Expansions Encounters method (Dungeons and raids)
-@bot.message_handler(commands=['expansions'])
+# ? Expansions Encounters method (Dungeons and raids)
+@bot.message_handler(commands=['dungeons'])
 def sendExpansions(message):
 	userId = message.from_user.id
+	markup = telebot.types.InlineKeyboardMarkup()
 	try:
 		query = {'_id': userId}
 		result = getInfoDB(tableName, query)
-		bot.send_message(message.chat.id, 'Calculating... ಠ_ರೃ')
 		for record in result:
 			if record.get('region') != None and record.get('locale') != None:
 				blizzSession = createAccessToken(record['region'])
@@ -765,13 +765,10 @@ def sendExpansions(message):
 				response = requests.get(url, params = params)
 				response = response.json()
 				response = response.get('tiers')
-				expansions = ''
 				for exp in response:
-					if expansions != '':
-						expansions = f'{expansions}\n'
-					else:
-						expansions = f'{exp}'
-				bot.send_message(message.chat.id, f'{expansions}')
+					markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(exp.get('name')), callback_data = 'exp:{}-{}'.format(exp.get('id'), userId)))
+				markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='exp:Cancel'))
+				bot.send_message(message.chat.id, text = 'Choose an Expansion:', reply_markup = markup)
 			elif record.get('region') == None:
 				bot.send_message(message.chat.id, 'You need assign your region')
 			elif record.get('locale') == None:
@@ -780,6 +777,192 @@ def sendExpansions(message):
 		bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 	except Exception as e:
 		showError(message, e)
+
+# # * Dungeons callback
+@bot.callback_query_handler(func = lambda call: re.match('^exp:', call.data))
+def dungeonHandler(call):
+	req = call.data[4:]
+	# ? info[0]: expansion
+	# ? info[1]: userId
+	info = req.split('-')
+	markup = telebot.types.InlineKeyboardMarkup()
+	if info[0] != 'Cancel':
+		query = {'_id': int(info[1])}
+		result = getInfoDB(tableName, query)
+		for record in result:
+			if record:
+				# ? User found
+				if record.get('region') != None and record.get('locale') != None:
+					blizzSession = createAccessToken(record['region'])
+					try:
+						url = 'https://{}.api.blizzard.com/data/wow/journal-expansion/{}'.format(record.get('region'), info[0])
+						params = {
+							'namespace': 'static-{}'.format(record.get('region')),
+							'locale': record.get('locale'),
+							'access_token': blizzSession['access_token']
+						}
+						response = requests.get(url, params = params)
+						response = response.json()
+						if response.get('dungeons') != None:
+							# data += '\nDungeons:\n'
+							# for dungeon in response.get('dungeons'):
+							# 	data += '- {}\n'.format(dungeon.get('name'))
+							for dungeon in response.get('dungeons'):
+								markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(dungeon.get('name')), callback_data = 'dungeon:{}-{}'.format(dungeon.get('id'), info[1])))
+							markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='dungeon:Cancel'))
+						# if response.get('raids') != None:
+						# 	data += '\nRaids:\n'
+						# 	for dungeon in response.get('raids'):
+						# 		data += '- {}\n'.format(dungeon.get('name'))
+						# bot.send_message(chat_id = call.message.chat.id, text = '[test](/info)', parse_mode = 'MarkdownV2')
+						bot.send_message(chat_id = call.message.chat.id, text = '» {}'.format(response.get('name')), reply_markup = markup)
+					except requests.exceptions.ConnectionError as e:
+						bot.send_message(call.message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
+					except Exception as e:
+						showCallError(call, e)
+	else:
+		bot.send_message(call.message.chat.id, 'Operation cancelled (ㆆ _ ㆆ)')
+	bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+
+# * Dungeon list callback
+@bot.callback_query_handler(func = lambda call: re.match('^dungeon:', call.data))
+def dungeonSelectionHandler(call):
+	req = call.data[8:]
+	# ? info[0]: dungeonId
+	# ? info[1]: userId
+	info = req.split('-')
+	markup = telebot.types.InlineKeyboardMarkup()
+	if info[0] != 'Cancel':
+		query = {'_id': int(info[1])}
+		result = getInfoDB(tableName, query)
+		for record in result:
+			if record:
+				# ? User found
+				if record.get('region') != None and record.get('locale') != None:
+					blizzSession = createAccessToken(record['region'])
+					try:
+						getInstancePic(record.get('region'), record.get('locale'), info[0], blizzSession['access_token'], call.message.chat.id)
+						url = 'https://{}.api.blizzard.com/data/wow/journal-instance/{}'.format(record.get('region'), info[0])
+						params = {
+							'namespace': 'static-{}'.format(record.get('region')),
+							'locale': record.get('locale'),
+							'access_token': blizzSession['access_token']
+						}
+						response = requests.get(url, params = params)
+						response = response.json()
+						data = ''
+						if response.get('name') != None:
+							data += '»» {}\n'.format(response.get('name'))
+						if response.get('location') != None:
+							data += 'Location» {}\n\n'.format(response['location'].get('name'))
+						if response.get('description') != None:
+							data += '{}'.format(response.get('description'))
+						if response.get('encounters') != None:
+							for boss in response.get('encounters'):
+								markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(boss.get('name')), callback_data = 'boss:{}-{}'.format(boss.get('id'), info[1])))
+							markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='boss:Cancel'))
+						# bot.send_message(chat_id = call.message.chat.id, text = '[test](/info)', parse_mode = 'MarkdownV2')
+						bot.send_message(chat_id = call.message.chat.id, text = data, reply_markup = markup)
+					except requests.exceptions.ConnectionError as e:
+						bot.send_message(call.message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
+					except Exception as e:
+						showCallError(call, e)
+	else:
+		bot.send_message(call.message.chat.id, 'Operation cancelled (ㆆ _ ㆆ)')
+	bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+
+# * Boss list callback
+@bot.callback_query_handler(func = lambda call: re.match('^boss:', call.data))
+def bossSelectionHandler(call):
+	req = call.data[5:]
+	# ? info[0]: bossId
+	# ? info[1]: userId
+	info = req.split('-')
+	markup = telebot.types.InlineKeyboardMarkup()
+	if info[0] != 'Cancel':
+		query = {'_id': int(info[1])}
+		result = getInfoDB(tableName, query)
+		for record in result:
+			if record:
+				# ? User found
+				if record.get('region') != None and record.get('locale') != None:
+					blizzSession = createAccessToken(record['region'])
+					try:
+						url = 'https://{}.api.blizzard.com/data/wow/journal-encounter/{}'.format(record.get('region'), info[0])
+						params = {
+							'namespace': 'static-{}'.format(record.get('region')),
+							'locale': record.get('locale'),
+							'access_token': blizzSession['access_token']
+						}
+						response = requests.get(url, params = params)
+						response = response.json()
+						getBossPic(record.get('region'), record.get('locale'), response['creatures'][0]['creature_display'].get('id'), blizzSession['access_token'], call.message.chat.id)
+						data = ''
+						if response.get('name') != None:
+							data += '»»» {}\n'.format(response.get('name'))
+						if response.get('description') != None:
+							data += '{}\nObjects:'.format(response.get('description'))
+						if response.get('items') != None:
+							for item in response.get('items'):
+								markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(item['item'].get('name')), callback_data = 'item:{}-{}'.format(item['item'].get('id'), info[1])))
+							markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='item:Cancel'))
+						# bot.send_message(chat_id = call.message.chat.id, text = '[test](/info)', parse_mode = 'MarkdownV2')
+						bot.send_message(chat_id = call.message.chat.id, text = data, reply_markup = markup)
+					except requests.exceptions.ConnectionError as e:
+						bot.send_message(call.message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
+					except Exception as e:
+						showCallError(call, e)
+	else:
+		bot.send_message(call.message.chat.id, 'Operation cancelled (ㆆ _ ㆆ)')
+	bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+
+# * Item list callback
+@bot.callback_query_handler(func = lambda call: re.match('^item:', call.data))
+def itemSelectionHandler(call):
+	req = call.data[5:]
+	# ? info[0]: itemId
+	# ? info[1]: userId
+	info = req.split('-')
+	if info[0] != 'Cancel':
+		query = {'_id': int(info[1])}
+		result = getInfoDB(tableName, query)
+		for record in result:
+			if record:
+				# ? User found
+				if record.get('region') != None and record.get('locale') != None:
+					blizzSession = createAccessToken(record['region'])
+					try:
+						getItemPic(record.get('region'), record.get('locale'), info[0], blizzSession['access_token'], call.message.chat.id)
+						url = 'https://{}.api.blizzard.com/data/wow/item/{}'.format(record.get('region'), info[0])
+						params = {
+							'namespace': 'static-{}'.format(record.get('region')),
+							'locale': record.get('locale'),
+							'access_token': blizzSession['access_token']
+						}
+						response = requests.get(url, params = params)
+						response = response.json()
+						data = ''
+						if response.get('name') != None:
+							data += '»»»» {} - {}\n'.format(response.get('name'), response['quality'].get('name'))
+						if response['preview_item'].get('level') != None:
+							data += '{}\n'.format(response['preview_item']['level'].get('display_string'))
+						if response['item_subclass'].get('name') != None:
+							data += '{}\n'.format(response['item_subclass'].get('name'))
+						if response['preview_item'].get('stats') != None:
+							for stat in response['preview_item'].get('stats'):
+								data += '{}\n'.format(stat['display'].get('display_string'))
+						if response['preview_item'].get('spells') != None:
+							for stat in response['preview_item'].get('spells'):
+								data += '{}\n'.format(stat.get('description'))
+						# bot.send_message(chat_id = call.message.chat.id, text = '[test](/info)', parse_mode = 'MarkdownV2')
+						bot.send_message(chat_id = call.message.chat.id, text = data)
+					except requests.exceptions.ConnectionError as e:
+						bot.send_message(call.message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
+					except Exception as e:
+						showCallError(call, e)
+	else:
+		bot.send_message(call.message.chat.id, 'Operation cancelled (ㆆ _ ㆆ)')
+	bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
 
 @bot.message_handler(commands = ['data'])
 def sendAdminData(message):
@@ -820,6 +1003,60 @@ def getProfilePic(region, locale, realm, player, token, chatId):
 	response = response.json()
 	response = response.get('assets')
 	response = response[1].get('value')
+	if status != 404:
+		bot.send_chat_action(chatId, 'upload_photo')
+		bot.send_photo(chatId, response)
+	else:
+		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
+
+def getInstancePic(region, locale, instanceId, token, chatId):
+	path = 'https://{}.api.blizzard.com/data/wow/media/journal-instance/{}'.format(region, instanceId)
+	params = {
+		'namespace': 'static-{}'.format(region),
+		'locale': locale,
+		'access_token': token
+	}
+	response = requests.get(path, params = params)
+	status = response.status_code
+	response = response.json()
+	response = response.get('assets')
+	response = response[0].get('value')
+	if status != 404:
+		bot.send_chat_action(chatId, 'upload_photo')
+		bot.send_photo(chatId, response)
+	else:
+		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
+
+def getBossPic(region, locale, instanceId, token, chatId):
+	path = 'https://{}.api.blizzard.com/data/wow/media/creature-display/{}'.format(region, instanceId)
+	params = {
+		'namespace': 'static-{}'.format(region),
+		'locale': locale,
+		'access_token': token
+	}
+	response = requests.get(path, params = params)
+	status = response.status_code
+	response = response.json()
+	response = response.get('assets')
+	response = response[0].get('value')
+	if status != 404:
+		bot.send_chat_action(chatId, 'upload_photo')
+		bot.send_photo(chatId, response)
+	else:
+		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
+
+def getItemPic(region, locale, itemId, token, chatId):
+	path = 'https://{}.api.blizzard.com/data/wow/media/item/{}'.format(region, itemId)
+	params = {
+		'namespace': 'static-{}'.format(region),
+		'locale': locale,
+		'access_token': token
+	}
+	response = requests.get(path, params = params)
+	status = response.status_code
+	response = response.json()
+	response = response.get('assets')
+	response = response[0].get('value')
 	if status != 404:
 		bot.send_chat_action(chatId, 'upload_photo')
 		bot.send_photo(chatId, response)
