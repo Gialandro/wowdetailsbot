@@ -605,6 +605,7 @@ def sendBGStats(message):
 				response = response.json()
 				if statusCode != 404:
 					# ! Profile image
+					bot.send_message(message.chat.id, text = realm + player)
 					getProfilePic(record['region'], record['locale'], realm, player, blizzSession['access_token'], message.chat.id)
 					character = response.get('character')
 					bgData = ''
@@ -746,7 +747,7 @@ def sendMythicKeystone(message):
 		bot.send_message(message.chat.id, 'You need specify a realm and player •`_´•')
 
 # ? Expansions Encounters method (Dungeons and raids)
-@bot.message_handler(commands=['dungeons'])
+@bot.message_handler(commands=['dungeons', 'raids'])
 def sendExpansions(message):
 	userId = message.from_user.id
 	markup = telebot.types.InlineKeyboardMarkup()
@@ -766,9 +767,9 @@ def sendExpansions(message):
 				response = response.json()
 				response = response.get('tiers')
 				for exp in response:
-					markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(exp.get('name')), callback_data = 'exp:{}-{}'.format(exp.get('id'), userId)))
+					markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(exp.get('name')), callback_data = 'exp:{}-{}-{}'.format(exp.get('id'), userId, message.text[1:])))
 				markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='exp:Cancel'))
-				bot.send_message(message.chat.id, text = 'Choose an Expansion:', reply_markup = markup)
+				bot.send_message(message.chat.id, text = 'Choose an Expansion:' + message.text[1:], reply_markup = markup)
 			elif record.get('region') == None:
 				bot.send_message(message.chat.id, 'You need assign your region')
 			elif record.get('locale') == None:
@@ -784,6 +785,7 @@ def dungeonHandler(call):
 	req = call.data[4:]
 	# ? info[0]: expansion
 	# ? info[1]: userId
+	# ? info[2]: command
 	info = req.split('-')
 	markup = telebot.types.InlineKeyboardMarkup()
 	if info[0] != 'Cancel':
@@ -803,19 +805,15 @@ def dungeonHandler(call):
 						}
 						response = requests.get(url, params = params)
 						response = response.json()
-						if response.get('dungeons') != None:
-							# data += '\nDungeons:\n'
-							# for dungeon in response.get('dungeons'):
-							# 	data += '- {}\n'.format(dungeon.get('name'))
+						if response.get('dungeons') != None and info[2] == 'dungeons':
 							for dungeon in response.get('dungeons'):
-								markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(dungeon.get('name')), callback_data = 'dungeon:{}-{}'.format(dungeon.get('id'), info[1])))
+								markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(dungeon.get('name')), callback_data = 'instance:{}-{}'.format(dungeon.get('id'), info[1])))
 							markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='dungeon:Cancel'))
-						# if response.get('raids') != None:
-						# 	data += '\nRaids:\n'
-						# 	for dungeon in response.get('raids'):
-						# 		data += '- {}\n'.format(dungeon.get('name'))
-						# bot.send_message(chat_id = call.message.chat.id, text = '[test](/info)', parse_mode = 'MarkdownV2')
-						bot.send_message(chat_id = call.message.chat.id, text = '» {}'.format(response.get('name')), reply_markup = markup)
+						elif response.get('raids') != None and info[2] == 'raids':
+							for dungeon in response.get('raids'):
+								markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(dungeon.get('name')), callback_data = 'instance:{}-{}'.format(dungeon.get('id'), info[1])))
+							markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='dungeon:Cancel'))
+						bot.send_message(chat_id = call.message.chat.id, text = '» {} {}'.format(response.get('name'), info[2]), reply_markup = markup)
 					except requests.exceptions.ConnectionError as e:
 						bot.send_message(call.message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 					except Exception as e:
@@ -824,10 +822,10 @@ def dungeonHandler(call):
 		bot.send_message(call.message.chat.id, 'Operation cancelled (ㆆ _ ㆆ)')
 	bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
 
-# * Dungeon list callback
-@bot.callback_query_handler(func = lambda call: re.match('^dungeon:', call.data))
-def dungeonSelectionHandler(call):
-	req = call.data[8:]
+# * Instance list callback
+@bot.callback_query_handler(func = lambda call: re.match('^instance:', call.data))
+def instanceSelectionHandler(call):
+	req = call.data[9:]
 	# ? info[0]: dungeonId
 	# ? info[1]: userId
 	info = req.split('-')
@@ -906,7 +904,6 @@ def bossSelectionHandler(call):
 							for item in response.get('items'):
 								markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(item['item'].get('name')), callback_data = 'item:{}-{}'.format(item['item'].get('id'), info[1])))
 							markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='item:Cancel'))
-						# bot.send_message(chat_id = call.message.chat.id, text = '[test](/info)', parse_mode = 'MarkdownV2')
 						bot.send_message(chat_id = call.message.chat.id, text = data, reply_markup = markup)
 					except requests.exceptions.ConnectionError as e:
 						bot.send_message(call.message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
@@ -954,7 +951,6 @@ def itemSelectionHandler(call):
 						if response['preview_item'].get('spells') != None:
 							for stat in response['preview_item'].get('spells'):
 								data += '{}\n'.format(stat.get('description'))
-						# bot.send_message(chat_id = call.message.chat.id, text = '[test](/info)', parse_mode = 'MarkdownV2')
 						bot.send_message(chat_id = call.message.chat.id, text = data)
 					except requests.exceptions.ConnectionError as e:
 						bot.send_message(call.message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
