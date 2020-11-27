@@ -896,7 +896,10 @@ def bossSelectionHandler(call):
 						}
 						response = requests.get(url, params = params)
 						response = response.json()
-						getBossPic(record.get('region'), record.get('locale'), response['creatures'][0]['creature_display'].get('id'), blizzSession['access_token'], call.message.chat.id)
+						if response.get('creatures') != None:
+							for boss in response.get('creatures'):
+								bot.send_message(call.message.chat.id, boss.get('name'))
+								getBossPic(record.get('region'), record.get('locale'), boss['creature_display'].get('id'), blizzSession['access_token'], call.message.chat.id)
 						data = ''
 						if response.get('name') != None:
 							data += '»»» {}\n'.format(response.get('name'))
