@@ -907,11 +907,11 @@ def bossSelectionHandler(call):
 							data += '\n🔴 {}\n{}\n'.format(resumen.get('title'), resumen.get('body_text'))
 							if resumen.get('sections') != None:
 								for index, detail in enumerate(resumen.get('sections')):
-									if detail.get('title') == 'Tanques' or detail.get('title') == 'Tank':
+									if detail.get('title') == 'Tanques' or detail.get('title') == 'Tanks':
 										data += '\n🛡'
-									elif detail.get('title') == 'Infligidores de daño' or detail.get('title') == 'Damage':
+									elif detail.get('title') == 'Infligidores de daño' or detail.get('title') == 'Damage Dealers':
 										data += '\n🧨'
-									elif detail.get('title') == 'Sanadores' or detail.get('title') == 'Healer':
+									elif detail.get('title') == 'Sanadores' or detail.get('title') == 'Healers':
 										data += '\n🚑'
 									data += '{}\n{}\n'.format(detail.get('title'), detail.get('body_text').replace('$bullet;', '»'))
 						if response.get('items') != None:
