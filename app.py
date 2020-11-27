@@ -49,7 +49,7 @@ locales = {
 # ? Start method
 @bot.message_handler(commands = ['start', 'help'])
 def startMessage(message):
-	bot.send_message(message.chat.id, text = '''This bot get info from World of Warcraft.
+	bot.send_message(message.chat.id, text = '''This bot get info from World of Warcraft
 	Author: @Gialandro
 	Github: https://github.com/Gialandro/wowdetailsbot
 
@@ -80,7 +80,11 @@ def startMessage(message):
 		Example: /arena 2v2 ragnaros nysler
 	» /myth [realm] [character] - Get Mythic dungeons completed of a character
 		Example: /myth ragnaros nysler
-	''', disable_web_page_preview = True)
+	» /dungeons - Get dungeon details of expansions
+		Example: /dungeons
+	» /raids - Get Mythic raid details of expansions
+		Example: /raids
+	''', disable_web_page_preview=True)
 
 # ? Region method
 @bot.message_handler(commands = ['region'])
@@ -272,7 +276,7 @@ def sendGear(message):
 				response = requests.get(url, params = params)
 				statusCode = response.status_code
 				response = response.json()
-				if statusCode != 404:
+				if statusCode == 200:
 					if response.get('equipped_items') != None:
 						for item in response.get('equipped_items'):
 							itemId = player + '-' + item['slot'].get('type')
@@ -355,7 +359,7 @@ def sendGear(message):
 							}
 							recordList.append(pymongo.UpdateOne(gearQuery, itemRecord, upsert=True))
 							equipment.append(telebot.types.InlineKeyboardButton(text = item['inventory_type']['name'] + itemType, callback_data = 'gear:' + itemId))
-						getProfilePic(record['region'], record['locale'], realm, player, blizzSession['access_token'], message.chat.id)
+						getProfilePic(record.get('region'), record.get('locale'), realm, player, blizzSession.get('access_token'), message.chat.id)
 						# * Show 2 buttons per row
 						if len(equipment) % 2 != 0:
 							equipment.append(1)
@@ -464,9 +468,9 @@ def sendStats(message):
 				response = requests.get(url, params = params)
 				statusCode = response.status_code
 				response = response.json()
-				if statusCode != 404:
+				if statusCode == 200:
 					# ! Profile image
-					getProfilePic(record['region'], record['locale'], realm, player, blizzSession['access_token'], message.chat.id)
+					getProfilePic(record.get('region'), record.get('locale'), realm, player, blizzSession.get('access_token'), message.chat.id)
 					# ! Player summary structure
 					urlSummary = 'https://{}.api.blizzard.com/profile/wow/character/{}/{}'.format(record['region'], realm, player)
 					summaryResponse = requests.get(urlSummary, params = params)
@@ -603,10 +607,9 @@ def sendBGStats(message):
 				response = requests.get(url, params = params)
 				statusCode = response.status_code
 				response = response.json()
-				if statusCode != 404:
+				if statusCode == 200:
 					# ! Profile image
-					bot.send_message(message.chat.id, text = realm + player)
-					getProfilePic(record['region'], record['locale'], realm, player, blizzSession['access_token'], message.chat.id)
+					getProfilePic(record.get('region'), record.get('locale'), realm, player, blizzSession.get('access_token'), message.chat.id)
 					character = response.get('character')
 					bgData = ''
 					bgData += '{} - {}\n'.format(character.get('name'), character['realm'].get('name'))
@@ -656,9 +659,9 @@ def sendArenaStats(message):
 				response = requests.get(url, params = params)
 				statusCode = response.status_code
 				response = response.json()
-				if statusCode != 404 and statusCode != 403:
+				if statusCode == 200 and statusCode != 403:
 					# ! Profile image
-					getProfilePic(record['region'], record['locale'], realm, player, blizzSession['access_token'], message.chat.id)
+					getProfilePic(record.get('region'), record.get('locale'), realm, player, blizzSession.get('access_token'), message.chat.id)
 					arenaData = ''
 					faction = response.get('faction')
 					character = response.get('character')
@@ -708,9 +711,9 @@ def sendMythicKeystone(message):
 				response = requests.get(url, params = params)
 				statusCode = response.status_code
 				response = response.json()
-				if statusCode != 404 and statusCode != 403:
+				if statusCode == 200 and statusCode != 403:
 					# ! Profile image
-					getProfilePic(record['region'], record['locale'], realm, player, blizzSession['access_token'], message.chat.id)
+					getProfilePic(record.get('region'), record.get('locale'), realm, player, blizzSession.get('access_token'), message.chat.id)
 					mythicData = ''
 					if response.get('character') != None:
 						player = response.get('character')
@@ -769,7 +772,7 @@ def sendExpansions(message):
 				for exp in response:
 					markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(exp.get('name')), callback_data = 'exp:{}-{}-{}'.format(exp.get('id'), userId, message.text[1:])))
 				markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='exp:Cancel'))
-				bot.send_message(message.chat.id, text = 'Choose an Expansion:' + message.text[1:], reply_markup = markup)
+				bot.send_message(message.chat.id, text = 'Choose an Expansion:', reply_markup = markup)
 			elif record.get('region') == None:
 				bot.send_message(message.chat.id, 'You need assign your region')
 			elif record.get('locale') == None:
@@ -813,7 +816,7 @@ def dungeonHandler(call):
 							for dungeon in response.get('raids'):
 								markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(dungeon.get('name')), callback_data = 'instance:{}-{}'.format(dungeon.get('id'), info[1])))
 							markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='dungeon:Cancel'))
-						bot.send_message(chat_id = call.message.chat.id, text = '» {} {}'.format(response.get('name'), info[2]), reply_markup = markup)
+						bot.send_message(chat_id = call.message.chat.id, text = '» {}'.format(response.get('name')), reply_markup = markup)
 					except requests.exceptions.ConnectionError as e:
 						bot.send_message(call.message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 					except Exception as e:
@@ -859,7 +862,6 @@ def instanceSelectionHandler(call):
 							for boss in response.get('encounters'):
 								markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(boss.get('name')), callback_data = 'boss:{}-{}'.format(boss.get('id'), info[1])))
 							markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='boss:Cancel'))
-						# bot.send_message(chat_id = call.message.chat.id, text = '[test](/info)', parse_mode = 'MarkdownV2')
 						bot.send_message(chat_id = call.message.chat.id, text = data, reply_markup = markup)
 					except requests.exceptions.ConnectionError as e:
 						bot.send_message(call.message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
@@ -899,8 +901,21 @@ def bossSelectionHandler(call):
 						if response.get('name') != None:
 							data += '»»» {}\n'.format(response.get('name'))
 						if response.get('description') != None:
-							data += '{}\nObjects:'.format(response.get('description'))
+							data += '📖 {}\n'.format(response.get('description'))
+						if response.get('sections') != None:
+							resumen = response['sections'][0]
+							data += '\n🔴 {}\n{}\n'.format(resumen.get('title'), resumen.get('body_text'))
+							if resumen.get('sections') != None:
+								for index, detail in enumerate(resumen.get('sections')):
+									if detail.get('title') == 'Tanques' or detail.get('title') == 'Tank':
+										data += '\n🛡'
+									elif detail.get('title') == 'Infligidores de daño' or detail.get('title') == 'Damage':
+										data += '\n🧨'
+									elif detail.get('title') == 'Sanadores' or detail.get('title') == 'Healer':
+										data += '\n🚑'
+									data += '{}\n{}\n'.format(detail.get('title'), detail.get('body_text').replace('$bullet;', '»'))
 						if response.get('items') != None:
+							data += 'Objects:'
 							for item in response.get('items'):
 								markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(item['item'].get('name')), callback_data = 'item:{}-{}'.format(item['item'].get('id'), info[1])))
 							markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='item:Cancel'))
@@ -999,9 +1014,12 @@ def getProfilePic(region, locale, realm, player, token, chatId):
 	response = response.json()
 	response = response.get('assets')
 	response = response[1].get('value')
-	if status != 404:
-		bot.send_chat_action(chatId, 'upload_photo')
-		bot.send_photo(chatId, response)
+	if status == 200:
+		try:
+			bot.send_chat_action(chatId, 'upload_photo')
+			bot.send_photo(chatId, response)
+		except Exception as e:
+			bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
 	else:
 		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
 
@@ -1017,11 +1035,14 @@ def getInstancePic(region, locale, instanceId, token, chatId):
 	response = response.json()
 	response = response.get('assets')
 	response = response[0].get('value')
-	if status != 404:
-		bot.send_chat_action(chatId, 'upload_photo')
-		bot.send_photo(chatId, response)
+	if status == 200:
+		try:
+			bot.send_chat_action(chatId, 'upload_photo')
+			bot.send_photo(chatId, response)
+		except Exception as e:
+			bot.send_message(chatId, text = 'Instance image not found ¯\\_(ツ)_/¯')
 	else:
-		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
+		bot.send_message(chatId, text = 'Instance image not found ¯\\_(ツ)_/¯')
 
 def getBossPic(region, locale, instanceId, token, chatId):
 	path = 'https://{}.api.blizzard.com/data/wow/media/creature-display/{}'.format(region, instanceId)
@@ -1035,11 +1056,14 @@ def getBossPic(region, locale, instanceId, token, chatId):
 	response = response.json()
 	response = response.get('assets')
 	response = response[0].get('value')
-	if status != 404:
-		bot.send_chat_action(chatId, 'upload_photo')
-		bot.send_photo(chatId, response)
+	if status == 200:
+		try:
+			bot.send_chat_action(chatId, 'upload_photo')
+			bot.send_photo(chatId, response)
+		except Exception as e:
+			bot.send_message(chatId, text = 'Boss image not found ¯\\_(ツ)_/¯')
 	else:
-		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
+		bot.send_message(chatId, text = 'Boss image not found ¯\\_(ツ)_/¯')
 
 def getItemPic(region, locale, itemId, token, chatId):
 	path = 'https://{}.api.blizzard.com/data/wow/media/item/{}'.format(region, itemId)
@@ -1053,11 +1077,14 @@ def getItemPic(region, locale, itemId, token, chatId):
 	response = response.json()
 	response = response.get('assets')
 	response = response[0].get('value')
-	if status != 404:
-		bot.send_chat_action(chatId, 'upload_photo')
-		bot.send_photo(chatId, response)
+	if status == 200:
+		try:
+			bot.send_chat_action(chatId, 'upload_photo')
+			bot.send_photo(chatId, response)
+		except Exception as e:
+			bot.send_message(chatId, text = 'Item image not found ¯\\_(ツ)_/¯')
 	else:
-		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
+		bot.send_message(chatId, text = 'Item image not found ¯\\_(ツ)_/¯')
 
 def encodeString(infoToEncode):
 	infoToEncode = infoToEncode.lower()
