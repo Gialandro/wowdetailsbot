@@ -1015,13 +1015,16 @@ def getProfilePic(region, locale, realm, player, token, chatId):
 	response = requests.get(path, params = params)
 	status = response.status_code
 	response = response.json()
-	response = response.get('assets')
-	response = response[1].get('value')
 	if status == 200:
 		try:
+			if response.get('assets') != None:
+				response = response.get('assets')
+				response = response[2].get('value')
+			elif response.get('render_url') != None:
+				response = response.get('render_url')
 			bot.send_chat_action(chatId, 'upload_photo')
 			bot.send_photo(chatId, response)
-		except Exception as e:
+		except:
 			bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
 	else:
 		bot.send_message(chatId, text = 'Profile image not found ¯\\_(ツ)_/¯')
@@ -1036,13 +1039,14 @@ def getInstancePic(region, locale, instanceId, token, chatId):
 	response = requests.get(path, params = params)
 	status = response.status_code
 	response = response.json()
-	response = response.get('assets')
-	response = response[0].get('value')
 	if status == 200:
 		try:
+			if response.get('assets') != None:
+				response = response.get('assets')
+				response = response[0].get('value')
 			bot.send_chat_action(chatId, 'upload_photo')
 			bot.send_photo(chatId, response)
-		except Exception as e:
+		except:
 			bot.send_message(chatId, text = 'Instance image not found ¯\\_(ツ)_/¯')
 	else:
 		bot.send_message(chatId, text = 'Instance image not found ¯\\_(ツ)_/¯')
@@ -1057,10 +1061,11 @@ def getBossPic(region, locale, instanceId, token, chatId):
 	response = requests.get(path, params = params)
 	status = response.status_code
 	response = response.json()
-	response = response.get('assets')
-	response = response[0].get('value')
 	if status == 200:
 		try:
+			if response.get('assets') != None:
+				response = response.get('assets')
+				response = response[0].get('value')
 			bot.send_chat_action(chatId, 'upload_photo')
 			bot.send_photo(chatId, response)
 		except Exception as e:
@@ -1078,10 +1083,11 @@ def getItemPic(region, locale, itemId, token, chatId):
 	response = requests.get(path, params = params)
 	status = response.status_code
 	response = response.json()
-	response = response.get('assets')
-	response = response[0].get('value')
 	if status == 200:
 		try:
+			if response.get('assets') != None:
+				response = response.get('assets')
+				response = response[0].get('value')
 			bot.send_chat_action(chatId, 'upload_photo')
 			bot.send_photo(chatId, response)
 		except Exception as e:
