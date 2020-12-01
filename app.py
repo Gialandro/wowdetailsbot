@@ -23,6 +23,7 @@ dbUri = os.getenv('dbUri')
 dbName = os.getenv('dbName')
 tableName = os.getenv('tableName')
 tableGear = os.getenv('tableGear')
+tableCovenantSkills = os.getenv('tableCovenantSkills')
 tableAdmin = os.getenv('tableAdmin')
 userAdmin = int(os.getenv('adminUser'))
 bot = telebot.TeleBot(tgTkn, threaded=False)
@@ -84,6 +85,8 @@ def startMessage(message):
 		Example: /dungeons
 	» /raids - Get Mythic raid details of expansions
 		Example: /raids
+	» /covenant - Get details of covenants
+		Example: /covenant
 	''', disable_web_page_preview=True)
 
 # ? Region method
@@ -374,7 +377,7 @@ def sendGear(message):
 						summaryResponse = requests.get(urlSummary, params = params)
 						summaryStatus = summaryResponse.status_code
 						summaryResponse = summaryResponse.json()
-						if summaryStatus != 404:
+						if summaryStatus == 200:
 							summaryData = ''
 							if summaryResponse['faction'].get('type') == 'HORDE':
 								summaryData += '⚔️ {}\n'.format(summaryResponse['faction'].get('name'))
@@ -978,6 +981,143 @@ def itemSelectionHandler(call):
 		bot.send_message(call.message.chat.id, 'Operation cancelled (ㆆ _ ㆆ)')
 	bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
 
+# ? Covenant method
+@bot.message_handler(commands=['covenant'])
+def sendCovenants(message):
+	userId = message.from_user.id
+	markup = telebot.types.InlineKeyboardMarkup()
+	try:
+		query = {'_id': userId}
+		result = getInfoDB(tableName, query)
+		for record in result:
+			if record.get('region') != None and record.get('locale') != None:
+				blizzSession = createAccessToken(record['region'])
+				url = 'https://{}.api.blizzard.com/data/wow/covenant/index'.format(record['region'])
+				params = {
+					'namespace': 'static-{}'.format(record['region']),
+					'locale': record['locale'],
+					'access_token': blizzSession['access_token']
+				}
+				response = requests.get(url, params = params)
+				response = response.json()
+				response = response.get('covenants')
+				for covenant in response:
+					markup.add(telebot.types.InlineKeyboardButton(text = '{}'.format(covenant.get('name')), callback_data = 'cov:{}-{}-{}'.format(covenant.get('id'), userId, message.text[1:])))
+				markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='cov:Cancel'))
+				bot.send_message(message.chat.id, text = 'Choose a Covenant:', reply_markup = markup)
+			elif record.get('region') == None:
+				bot.send_message(message.chat.id, 'You need assign your region')
+			elif record.get('locale') == None:
+				bot.send_message(message.chat.id, 'You need assign your locale')
+	except requests.exceptions.ConnectionError as e:
+		bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
+	except Exception as e:
+		showError(message, e)
+
+# # * Covenant callback
+@bot.callback_query_handler(func = lambda call: re.match('^cov:', call.data))
+def covenantHandler(call):
+	req = call.data[4:]
+	# ? info[0]: expansion
+	# ? info[1]: userId
+	# ? info[2]: command
+	info = req.split('-')
+	markup = telebot.types.InlineKeyboardMarkup()
+	if info[0] != 'Cancel':
+		query = {'_id': int(info[1])}
+		result = getInfoDB(tableName, query)
+		for record in result:
+			if record:
+				# ? User found
+				if record.get('region') != None and record.get('locale') != None:
+					blizzSession = createAccessToken(record['region'])
+					try:
+						data = ''
+						url = 'https://{}.api.blizzard.com/data/wow/covenant/{}'.format(record.get('region'), info[0])
+						params = {
+							'namespace': 'static-{}'.format(record.get('region')),
+							'locale': record.get('locale'),
+							'access_token': blizzSession['access_token']
+						}
+						response = requests.get(url, params = params)
+						statusCode = response.status_code
+						response = response.json()
+						if statusCode == 200:
+							recordList = []
+							client = pymongo.MongoClient(dbUri + pathModify)
+							wowDb = client[dbName]
+							wowTableCovenant = wowDb[tableCovenantSkills]
+							if response.get('name') != None:
+								data += '» {}\n'.format(response.get('name'))
+							if response.get('description') != None:
+								data += '📖{}\n'.format(response.get('description'))
+							if response.get('signature_ability') != None:
+								data += '\n»» 💫{}:\n{}\n'.format(response['signature_ability']['spell_tooltip']['spell'].get('name'), response['signature_ability']['spell_tooltip'].get('description'))
+							if response['signature_ability']['spell_tooltip'].get('cooldown') != None:
+								data += '» {}\n'.format(response['signature_ability']['spell_tooltip'].get('cooldown'))
+							if response['signature_ability']['spell_tooltip'].get('cast_time') != None:
+								data += '» {}'.format(response['signature_ability']['spell_tooltip'].get('cast_time'))
+							bot.send_message(chat_id = call.message.chat.id, text = data)
+							if response.get('class_abilities') != None:
+								skillList = []
+								for skill in response.get('class_abilities'):
+									skillData = ''
+									classSkill = '{}-{}'.format(response.get('name'), skill['playable_class'].get('name'))
+									skillList.append(telebot.types.InlineKeyboardButton(text = '{}'.format(skill['playable_class'].get('name')), callback_data = f'covSkill:{classSkill}'))
+									skillData = '» {}\n»» {}\n» {}\n» {}\n» {}\n'.format(skill['playable_class'].get('name'), skill['spell_tooltip']['spell'].get('name'), skill['spell_tooltip'].get('description'), skill['spell_tooltip'].get('cast_time'), skill['spell_tooltip'].get('cooldown'))
+									if skill['spell_tooltip'].get('power_cost') != None and skill['spell_tooltip'].get('power_cost') != 'null':
+										skillData += '» {}'.format(skill['spell_tooltip'].get('power_cost'))
+									skillQuery = {'classSkill': classSkill}
+									itemRecord = {
+										'$set': {
+											'classSkill': classSkill,
+											'data': skillData
+										}
+									}
+									recordList.append(pymongo.UpdateOne(skillQuery, itemRecord, upsert=True))
+								skillList = numpy.array(skillList).reshape(-1, 2)
+								for item in skillList:
+									markup.row(item[0], item[1])
+								markup.add(telebot.types.InlineKeyboardButton(text='Cancel', callback_data='covSkill:Cancel'))
+								bot.send_message(chat_id = call.message.chat.id, text = 'Choocse a class:', reply_markup = markup)
+							wowTableCovenant.bulk_write(recordList)
+						else:
+							bot.send_message(call.message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
+					except requests.exceptions.ConnectionError as e:
+						bot.send_message(call.message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
+					except Exception as e:
+						showCallError(call, e)
+	else:
+		bot.send_message(call.message.chat.id, 'Operation cancelled (ㆆ _ ㆆ)')
+	bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+
+# * Covenant skill callback
+@bot.callback_query_handler(func = lambda call: re.match('^covSkill:', call.data))
+def covenantSkillHandler(call):
+	covenant = call.data[9:]
+	if covenant != 'close':
+		client = pymongo.MongoClient(dbUri)
+		bot.answer_callback_query(callback_query_id = call.id, text = 'Option accepted •`_´•')
+		try:
+			query = {'classSkill': covenant}
+			result = getInfoDB(tableCovenantSkills, query)
+			for record in result:
+				if record:
+					# ? covenant found
+					if record.get('data') != None:
+						result = record.get('data')
+						bot.send_message(call.message.chat.id, result)
+					# ? covenant without data
+					else:
+						bot.send_message(call.message.chat.id, 'Skill not found (´סּ︵סּ`)')
+				else:
+					# ? covenant not found
+					bot.send_message(call.message.chat.id, 'Skill not found (´סּ︵סּ`)')
+		except Exception as e:
+			showCallError(call, e)
+		client.close()
+	bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+
 @bot.message_handler(commands = ['data'])
 def sendAdminData(message):
 	bot.send_message(message.chat.id, 'Searching Data... ಠ_ರೃ')
@@ -1068,7 +1208,7 @@ def getBossPic(region, locale, instanceId, token, chatId):
 				response = response[0].get('value')
 			bot.send_chat_action(chatId, 'upload_photo')
 			bot.send_photo(chatId, response)
-		except Exception as e:
+		except:
 			bot.send_message(chatId, text = 'Boss image not found ¯\\_(ツ)_/¯')
 	else:
 		bot.send_message(chatId, text = 'Boss image not found ¯\\_(ツ)_/¯')
@@ -1090,7 +1230,7 @@ def getItemPic(region, locale, itemId, token, chatId):
 				response = response[0].get('value')
 			bot.send_chat_action(chatId, 'upload_photo')
 			bot.send_photo(chatId, response)
-		except Exception as e:
+		except:
 			bot.send_message(chatId, text = 'Item image not found ¯\\_(ツ)_/¯')
 	else:
 		bot.send_message(chatId, text = 'Item image not found ¯\\_(ツ)_/¯')

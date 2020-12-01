@@ -29,6 +29,7 @@
 		"dbName": "@db-name",
 		"tableName": "@table-name",
 		"tableGear": "@table-gear",
+		"tableCovenantSkills": "@table-covenant-skills",
 		"tableAdmin": "@table-admin",
 		"adminUser": "@admin-user",
 		"blizzId": "@blizzard-id",
