@@ -1043,6 +1043,7 @@ def covenantHandler(call):
 						statusCode = response.status_code
 						response = response.json()
 						if statusCode == 200:
+							getCovenantPic(record.get('region'), record.get('locale'), response.get('id'), blizzSession['access_token'], call.message.chat.id)
 							recordList = []
 							client = pymongo.MongoClient(dbUri + pathModify)
 							wowDb = client[dbName]
@@ -1064,8 +1065,10 @@ def covenantHandler(call):
 									skillData = ''
 									classSkill = '{}-{}'.format(response.get('name'), skill['playable_class'].get('name'))
 									skillList.append(telebot.types.InlineKeyboardButton(text = '{}'.format(skill['playable_class'].get('name')), callback_data = f'covSkill:{classSkill}'))
-									skillData = '» {}\n»» {}\n» {}\n» {}\n» {}\n'.format(skill['playable_class'].get('name'), skill['spell_tooltip']['spell'].get('name'), skill['spell_tooltip'].get('description'), skill['spell_tooltip'].get('cast_time'), skill['spell_tooltip'].get('cooldown'))
-									if skill['spell_tooltip'].get('power_cost') != None and skill['spell_tooltip'].get('power_cost') != 'null':
+									skillData = '» {}\n»» {}\n» {}\n» {}\n'.format(skill['playable_class'].get('name'), skill['spell_tooltip']['spell'].get('name'), skill['spell_tooltip'].get('description'), skill['spell_tooltip'].get('cast_time'))
+									if skill['spell_tooltip'].get('cooldown') != None and skill['spell_tooltip'].get('cooldown') != 'None':
+										skillData += '» {}\n'.format(skill['spell_tooltip'].get('cooldown'))
+									if skill['spell_tooltip'].get('power_cost') != None and skill['spell_tooltip'].get('power_cost') != 'None':
 										skillData += '» {}'.format(skill['spell_tooltip'].get('power_cost'))
 									skillQuery = {'classSkill': classSkill}
 									itemRecord = {
@@ -1234,6 +1237,28 @@ def getItemPic(region, locale, itemId, token, chatId):
 			bot.send_message(chatId, text = 'Item image not found ¯\\_(ツ)_/¯')
 	else:
 		bot.send_message(chatId, text = 'Item image not found ¯\\_(ツ)_/¯')
+
+def getCovenantPic(region, locale, itemId, token, chatId):
+	path = 'https://{}.api.blizzard.com/data/wow/media/covenant/{}'.format(region, itemId)
+	params = {
+		'namespace': 'static-{}'.format(region),
+		'locale': locale,
+		'access_token': token
+	}
+	response = requests.get(path, params = params)
+	status = response.status_code
+	response = response.json()
+	if status == 200:
+		try:
+			if response.get('assets') != None:
+				response = response.get('assets')
+				response = response[0].get('value')
+			bot.send_chat_action(chatId, 'upload_photo')
+			bot.send_photo(chatId, response)
+		except:
+			bot.send_message(chatId, text = 'Covenant image not found ¯\\_(ツ)_/¯')
+	else:
+		bot.send_message(chatId, text = 'Covenant image not found ¯\\_(ツ)_/¯')
 
 def encodeString(infoToEncode):
 	infoToEncode = infoToEncode.lower()
