@@ -915,7 +915,7 @@ def bossSelectionHandler(call):
 								for index, detail in enumerate(resumen.get('sections')):
 									if detail.get('title') == 'Tanques' or detail.get('title') == 'Tanque' or detail.get('title') == 'Tanks' or detail.get('title') == 'Tank':
 										data += '\n🛡'
-									elif detail.get('title') == 'Infligidores de daño' or detail.get('title') == 'Damage Dealers':
+									elif detail.get('title') == 'Infligidores de daño' or detail.get('title') == 'Damage Dealers' or detail.get('title') == 'DPS':
 										data += '\n🧨'
 									elif detail.get('title') == 'Sanadores' or detail.get('title') == 'Sanador' or detail.get('title') == 'Healers' or detail.get('title') == 'Healer':
 										data += '\n🚑'
