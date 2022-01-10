@@ -69,6 +69,7 @@ def startMessage(message):
 	» /info - Get your actual Region and Locale assigned
 
 	Whith your region and locale assigned you can use this commands:
+
 	» /token - Get the actual token price
 	» /gear [realm] [character] - Get the current gear of a character
 		Example: /gear ragnaros nysler
@@ -102,6 +103,27 @@ def sendRegion(message):
 	for item in regionList:
 		markup.row(item[0], item[1])
 	bot.send_message(message.chat.id, text = 'NOTE: If you change your Region you MUST assign again your Locale\nChoose a region:', reply_markup = markup)
+
+# ? Test method
+@bot.message_handler(commands = ['test'])
+def sendTest(message):
+	userId = message.from_user.id
+	query = {'_id': userId}
+	result = getInfoDB(tableName, query)
+	for res in result:
+		bot.send_message(message.chat.id, f'{res.get("region")}')
+		bot.send_message(message.chat.id, f'{res.get("locale")}')
+		tokenTest = createAccessToken(res.get('region'))
+		tk = tokenTest.get('access_token')
+		url = f'https://{res.get("region")}.api.blizzard.com/data/wow/token/index'
+		params = {
+			'namespace': f'dynamic-{res.get("region")}',
+			'locale': f'{res.get("locale")}',
+			'access_token': f'{tk}'
+		}
+		response = requests.get(url, params = params)
+		bot.send_message(message.chat.id, f'{response.status_code}')
+		bot.send_message(message.chat.id, f'{response.json()}')
 
 # * Region callback
 @bot.callback_query_handler(func = lambda call: re.match('^region:', call.data))
@@ -222,20 +244,24 @@ def sendToken(message):
 		query = {'_id': userId}
 		result = getInfoDB(tableName, query)
 		bot.send_message(message.chat.id, 'Calculating... ಠ_ರೃ')
+		bot.send_message(message.chat.id, f'info {result[0].get("region")} - {result[0].get("locale")}')
 		for record in result:
 			if record.get('region') != None and record.get('locale') != None:
-				blizzSession = createAccessToken(record['region'])
-				url = 'https://{}.api.blizzard.com/data/wow/token/index'.format(record['region'])
+				blizzSession = createAccessToken(record.get('region'))
+				url = f'https://{record.get("region")}.api.blizzard.com/data/wow/token/index'
 				params = {
-					'namespace': 'dynamic-{}'.format(record['region']),
-					'locale': record['locale'],
-					'access_token': blizzSession['access_token']
+					'namespace': f'dynamic-{record.get("region")}',
+					'locale': f'{record.get("locale")}',
+					'access_token': f'{blizzSession.get("access_token")}'
 				}
 				response = requests.get(url, params = params)
-				response = response.json()
-				price = str(response['price'])[:-4]
-				output = '{:,}'.format(int(price))
-				bot.send_message(message.chat.id, f'{output} 🌕')
+				if response.status_code == 200:
+					response = response.json()
+					price = str(response['price'])[:-4]
+					output = '{:,}'.format(int(price))
+					bot.send_message(message.chat.id, f'{output} 🌕')
+				else:
+					bot.send_message(message.chat.id, 'Error connecting to Blizzard... try later (҂◡_◡) ᕤ')
 			elif record.get('region') == None:
 				bot.send_message(message.chat.id, 'You need assign your region')
 			elif record.get('locale') == None:
@@ -273,8 +299,8 @@ def sendGear(message):
 				url = 'https://{}.api.blizzard.com/profile/wow/character/{}/{}/equipment'.format(record['region'], realm, player)
 				params = {
 					'namespace': 'profile-{}'.format(record['region']),
-					'locale': record['locale'],
-					'access_token': blizzSession['access_token']
+					'locale': f'{record.get("locale")}',
+					'access_token': f'{blizzSession.get("access_token")}'
 				}
 				response = requests.get(url, params = params)
 				statusCode = response.status_code
@@ -465,8 +491,8 @@ def sendStats(message):
 				url = 'https://{}.api.blizzard.com/profile/wow/character/{}/{}/statistics'.format(record['region'], realm, player)
 				params = {
 					'namespace': 'profile-{}'.format(record['region']),
-					'locale': record['locale'],
-					'access_token': blizzSession['access_token']
+					'locale': f'{record.get("locale")}',
+					'access_token': f'{blizzSession.get("access_token")}'
 				}
 				response = requests.get(url, params = params)
 				statusCode = response.status_code
@@ -604,8 +630,8 @@ def sendBGStats(message):
 				url = 'https://{}.api.blizzard.com/profile/wow/character/{}/{}/pvp-summary'.format(record['region'], realm, player)
 				params = {
 					'namespace': 'profile-{}'.format(record['region']),
-					'locale': record['locale'],
-					'access_token': blizzSession['access_token']
+					'locale': f'{record.get("locale")}',
+					'access_token': f'{blizzSession.get("access_token")}'
 				}
 				response = requests.get(url, params = params)
 				statusCode = response.status_code
@@ -656,8 +682,8 @@ def sendArenaStats(message):
 				url = 'https://{}.api.blizzard.com/profile/wow/character/{}/{}/pvp-bracket/{}'.format(record['region'], realm, player, bracket)
 				params = {
 					'namespace': 'profile-{}'.format(record['region']),
-					'locale': record['locale'],
-					'access_token': blizzSession['access_token']
+					'locale': f'{record.get("locale")}',
+					'access_token': f'{blizzSession.get("access_token")}'
 				}
 				response = requests.get(url, params = params)
 				statusCode = response.status_code
@@ -708,8 +734,8 @@ def sendMythicKeystone(message):
 				url = 'https://{}.api.blizzard.com/profile/wow/character/{}/{}/mythic-keystone-profile'.format(record['region'], realm, player)
 				params = {
 					'namespace': 'profile-{}'.format(record['region']),
-					'locale': record['locale'],
-					'access_token': blizzSession['access_token']
+					'locale': f'{record.get("locale")}',
+					'access_token': f'{blizzSession.get("access_token")}'
 				}
 				response = requests.get(url, params = params)
 				statusCode = response.status_code
@@ -766,8 +792,8 @@ def sendExpansions(message):
 				url = 'https://{}.api.blizzard.com/data/wow/journal-expansion/index'.format(record['region'])
 				params = {
 					'namespace': 'static-{}'.format(record['region']),
-					'locale': record['locale'],
-					'access_token': blizzSession['access_token']
+					'locale': f'{record.get("locale")}',
+					'access_token': f'{blizzSession.get("access_token")}'
 				}
 				response = requests.get(url, params = params)
 				response = response.json()
@@ -807,7 +833,7 @@ def dungeonHandler(call):
 						params = {
 							'namespace': 'static-{}'.format(record.get('region')),
 							'locale': record.get('locale'),
-							'access_token': blizzSession['access_token']
+							'access_token': f'{blizzSession.get("access_token")}'
 						}
 						response = requests.get(url, params = params)
 						response = response.json()
@@ -850,7 +876,7 @@ def instanceSelectionHandler(call):
 						params = {
 							'namespace': 'static-{}'.format(record.get('region')),
 							'locale': record.get('locale'),
-							'access_token': blizzSession['access_token']
+							'access_token': f'{blizzSession.get("access_token")}'
 						}
 						response = requests.get(url, params = params)
 						response = response.json()
@@ -895,7 +921,7 @@ def bossSelectionHandler(call):
 						params = {
 							'namespace': 'static-{}'.format(record.get('region')),
 							'locale': record.get('locale'),
-							'access_token': blizzSession['access_token']
+							'access_token': f'{blizzSession.get("access_token")}'
 						}
 						response = requests.get(url, params = params)
 						response = response.json()
@@ -955,7 +981,7 @@ def itemSelectionHandler(call):
 						params = {
 							'namespace': 'static-{}'.format(record.get('region')),
 							'locale': record.get('locale'),
-							'access_token': blizzSession['access_token']
+							'access_token': f'{blizzSession.get("access_token")}'
 						}
 						response = requests.get(url, params = params)
 						response = response.json()
@@ -995,8 +1021,8 @@ def sendCovenants(message):
 				url = 'https://{}.api.blizzard.com/data/wow/covenant/index'.format(record['region'])
 				params = {
 					'namespace': 'static-{}'.format(record['region']),
-					'locale': record['locale'],
-					'access_token': blizzSession['access_token']
+					'locale': f'{record.get("locale")}',
+					'access_token': f'{blizzSession.get("access_token")}'
 				}
 				response = requests.get(url, params = params)
 				response = response.json()
@@ -1037,7 +1063,7 @@ def covenantHandler(call):
 						params = {
 							'namespace': 'static-{}'.format(record.get('region')),
 							'locale': record.get('locale'),
-							'access_token': blizzSession['access_token']
+							'access_token': f'{blizzSession.get("access_token")}'
 						}
 						response = requests.get(url, params = params)
 						statusCode = response.status_code
