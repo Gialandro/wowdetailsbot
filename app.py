@@ -124,6 +124,7 @@ def sendTest(message):
 		response = requests.get(url, params = params)
 		bot.send_message(message.chat.id, f'{response.status_code}')
 		bot.send_message(message.chat.id, f'{response.json()}')
+		bot.send_message(message.chat.id, tgTkn)
 
 # * Region callback
 @bot.callback_query_handler(func = lambda call: re.match('^region:', call.data))
