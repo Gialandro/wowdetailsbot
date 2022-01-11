@@ -1330,8 +1330,7 @@ def sendDuration(millisTime):
 
 @app.route('/bot', methods = ['GET', 'POST'])
 def getMessage():
-	if request.method == "POST":
-		bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+	bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
 	return jsonify({'status': 'ok'})
 
 if __name__ == '__main__':
