@@ -26,7 +26,7 @@ tableGear = os.getenv('tableGear')
 tableCovenantSkills = os.getenv('tableCovenantSkills')
 tableAdmin = os.getenv('tableAdmin')
 userAdmin = int(os.getenv('adminUser'))
-bot = telebot.TeleBot(tgTkn, threaded=False)
+bot = telebot.TeleBot(tgTkn, threaded=False, parse_mode='MARKDOWN')
 pathModify = '?retryWrites=true&w=majority'
 # pathModify = '?retryWrites=false'
 
