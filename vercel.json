@@ -9,6 +9,16 @@
 		{
 			"src": "/(.*)",
 			"dest": "app.py"
+		},
+		{
+			"src": "/bot",
+			"methods": ["POST"],
+			"dest": "app.py"
+		},
+		{
+			"src": "/bot",
+			"methods": ["GET"],
+			"dest": "app.py"
 		}
 	],
 	"env": {
